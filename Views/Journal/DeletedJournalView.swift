@@ -2,7 +2,7 @@
 //  DeletedJournalView.swift
 //  Aurora
 //
-//  Created by antigravity on 12/25/25.
+//  Created by souhail on 12/25/25.
 //
 
 import SwiftUI
@@ -24,39 +24,31 @@ struct DeletedJournalView: View {
   }
 
   var body: some View {
-    ZStack(alignment: .top) {
-      Color.clear.auroraBackground()
-
-      if taskStore.deletedJournalEntries.isEmpty {
-        emptyState
-      } else {
-        List {
-          // Spacer for header
-          Color.clear
-            .frame(height: 60)
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-
-          // Title section
-          VStack(alignment: .leading, spacing: 8) {
-            Text("Recently Deleted")
-              .font(.system(size: 32, weight: .bold))
-              .foregroundStyle(Theme.primary)
-
-            Text(
-              "Entries are available here for 30 days. After that time, entries will be permanently deleted."
-            )
-            .font(.system(size: 14))
-            .foregroundStyle(Theme.secondary)
-          }
-          .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16))
-          .listRowBackground(Color.clear)
-          .listRowSeparator(.hidden)
+    ScrollView(showsIndicators: false) {
+      VStack(spacing: 16) {
+        if taskStore.deletedJournalEntries.isEmpty {
+          emptyState
+        } else {
+          // Info text
+          Text(
+            "Entries are available here for 30 days. After that time, entries will be permanently deleted."
+          )
+          .font(.system(size: 14))
+          .foregroundStyle(Theme.secondary)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.horizontal, 4)
 
           // Grouped entries by days remaining
           ForEach(groupedEntries, id: \.daysRemaining) { group in
-            Section {
+            VStack(alignment: .leading, spacing: 8) {
+              // Days remaining header
+              Text("\(group.daysRemaining) Days Remaining")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Theme.tint)
+                .padding(.horizontal, 4)
+                .padding(.top, 8)
+
+              // Entries
               ForEach(group.entries) { entry in
                 DeletedEntryCard(
                   entry: entry,
@@ -80,55 +72,83 @@ struct DeletedJournalView: View {
                     }
                   }
                 )
-                .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                .contextMenu {
                   Button {
-                    withAnimation {
-                      taskStore.restoreJournalEntry(entry)
-                    }
+                    withAnimation { taskStore.restoreJournalEntry(entry) }
                   } label: {
-                    Label("", systemImage: "arrow.uturn.backward")
+                    Label("Recover", systemImage: "arrow.uturn.backward")
                   }
-                  .tint(.green)
-                }
-                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+
                   Button(role: .destructive) {
-                    withAnimation {
-                      taskStore.permanentlyDeleteJournalEntry(entry)
-                    }
+                    withAnimation { taskStore.permanentlyDeleteJournalEntry(entry) }
                   } label: {
-                    Label("", systemImage: "trash.fill")
+                    Label("Delete Permanently", systemImage: "trash")
                   }
                 }
               }
-            } header: {
-              Text("\(group.daysRemaining) Days Remaining")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Theme.tint)
-                .textCase(nil)
             }
-            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
           }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .scrollIndicators(.hidden)
+      }
+      .padding(.horizontal, 16)
+      .padding(.bottom, 100)
+    }
+    .background(Color.clear.auroraBackground())
+    .navigationTitle("Recently Deleted")
+    .toolbarTitleDisplayMode(.inlineLarge)
+    .safeAreaPadding(.top, 8)
+    .toolbar {
+      ToolbarItemGroup(placement: .topBarTrailing) {
+        if !taskStore.deletedJournalEntries.isEmpty {
+          if isSelecting && !selectedEntries.isEmpty {
+            // Recover Button
+            Button {
+              withAnimation {
+                for entryId in selectedEntries {
+                  if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId })
+                  {
+                    taskStore.restoreJournalEntry(entry)
+                  }
+                }
+                selectedEntries.removeAll()
+                isSelecting = false
+              }
+            } label: {
+              Image(systemName: "arrow.uturn.backward")
+                .foregroundStyle(.green)
+            }
+
+            // Delete Button
+            Button(role: .destructive) {
+              withAnimation {
+                for entryId in selectedEntries {
+                  if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId })
+                  {
+                    taskStore.permanentlyDeleteJournalEntry(entry)
+                  }
+                }
+                selectedEntries.removeAll()
+                isSelecting = false
+              }
+            } label: {
+              Image(systemName: "trash")
+            }
+          }
+
+          // Select / Done Button
+          Button(isSelecting ? "Done" : "Select") {
+            withAnimation {
+              isSelecting.toggle()
+              if !isSelecting {
+                selectedEntries.removeAll()
+              }
+            }
+          }
+        }
       }
 
-      // Header
-      headerView
-    }
-    .navigationBarBackButtonHidden(true)
-  }
-
-  // MARK: - Header
-  private var headerView: some View {
-    VStack(spacing: 0) {
-      HStack {
-        // Back button or Select All
-        if isSelecting {
+      if isSelecting {
+        ToolbarItem(placement: .topBarLeading) {
           Button {
             withAnimation {
               if selectedEntries.count == taskStore.deletedJournalEntries.count {
@@ -142,108 +162,19 @@ struct DeletedJournalView: View {
               selectedEntries.count == taskStore.deletedJournalEntries.count
                 ? "Deselect All" : "Select All"
             )
-            .font(.system(size: 15, weight: .medium))
             .foregroundStyle(Theme.tint)
-          }
-        } else {
-          Button {
-            dismiss()
-          } label: {
-            Image(systemName: "chevron.left")
-              .font(.system(size: 16, weight: .semibold))
-              .foregroundStyle(Theme.secondary)
-              .frame(width: 40, height: 40)
-              .background(
-                Circle()
-                  .fill(.clear)
-                  .glassEffect(.clear)
-              )
-          }
-          .contentShape(Circle())
-        }
-
-        Spacer()
-
-        // Selection Actions & Done Button
-        if !taskStore.deletedJournalEntries.isEmpty {
-          HStack(spacing: 8) {
-            if isSelecting && !selectedEntries.isEmpty {
-              // Recover Button
-              Button {
-                withAnimation {
-                  for entryId in selectedEntries {
-                    if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId }
-                    ) {
-                      taskStore.restoreJournalEntry(entry)
-                    }
-                  }
-                  selectedEntries.removeAll()
-                  isSelecting = false
-                }
-              } label: {
-                Image(systemName: "arrow.uturn.backward")
-                  .font(.system(size: 14, weight: .bold))
-                  .foregroundStyle(.white)
-                  .frame(width: 32, height: 32)
-                  .background(Circle().fill(Color.green))
-              }
-              .transition(.scale.combined(with: .opacity))
-
-              // Delete Button
-              Button {
-                withAnimation {
-                  for entryId in selectedEntries {
-                    if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId }
-                    ) {
-                      taskStore.permanentlyDeleteJournalEntry(entry)
-                    }
-                  }
-                  selectedEntries.removeAll()
-                  isSelecting = false
-                }
-              } label: {
-                Image(systemName: "trash.fill")
-                  .font(.system(size: 14, weight: .bold))
-                  .foregroundStyle(.white)
-                  .frame(width: 32, height: 32)
-                  .background(Circle().fill(Color.red))
-              }
-              .transition(.scale.combined(with: .opacity))
-            }
-
-            // Select / Done Button
-            Button {
-              withAnimation {
-                isSelecting.toggle()
-                if !isSelecting {
-                  selectedEntries.removeAll()
-                }
-              }
-            } label: {
-              Text(isSelecting ? "Done" : "Select")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Theme.primary)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(
-                  Capsule()
-                    .fill(.clear)
-                    .glassEffect(.clear)
-                )
-            }
           }
         }
       }
-      .padding(.horizontal, 16)
-      .padding(.top, 8)
-      .frame(height: 50)
     }
   }
 
   // MARK: - Empty State
+
   private var emptyState: some View {
     VStack(spacing: 16) {
       Spacer()
+        .frame(height: 100)
 
       Image(systemName: "trash")
         .font(.system(size: 48))
@@ -261,10 +192,12 @@ struct DeletedJournalView: View {
 
       Spacer()
     }
+    .frame(maxWidth: .infinity)
   }
 }
 
 // MARK: - Deleted Entry Card
+
 struct DeletedEntryCard: View {
   let entry: JournalEntry
   let isSelecting: Bool
@@ -298,7 +231,7 @@ struct DeletedEntryCard: View {
     }
     .padding(16)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .glassEffect(.clear)
+    .glassEffect(.regular)
     .contentShape(Rectangle())
     .onTapGesture {
       if isSelecting {

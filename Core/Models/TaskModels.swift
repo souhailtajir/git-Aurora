@@ -109,18 +109,21 @@ struct AppSettings: Codable {
   var smartListOrder: [SmartListType]
   var pinnedHomeSmartLists: [SmartListType]
   var pinnedHomeCategoryIds: [UUID]
+  var journalsLocked: Bool
 
   init(
     visibleSmartLists: [SmartListType] = [],
     visibleCategories: [UUID] = [],
     smartListOrder: [SmartListType] = [],
     pinnedHomeSmartLists: [SmartListType] = [.flagged],
-    pinnedHomeCategoryIds: [UUID] = []
+    pinnedHomeCategoryIds: [UUID] = [],
+    journalsLocked: Bool = false
   ) {
     self.visibleSmartLists = visibleSmartLists
     self.visibleCategories = visibleCategories
     self.smartListOrder = smartListOrder
     self.pinnedHomeSmartLists = pinnedHomeSmartLists
     self.pinnedHomeCategoryIds = pinnedHomeCategoryIds
+    self.journalsLocked = journalsLocked
   }
 }

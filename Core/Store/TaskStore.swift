@@ -34,6 +34,9 @@ final class TaskStore {
     didSet { scheduleSaveSettings() }
   }
   var myListsExpanded: Bool = true
+  var journalsLocked: Bool = false {
+    didSet { scheduleSaveSettings() }
+  }
 
   enum AddTaskTrigger {
     case none, home, tasks
@@ -241,7 +244,8 @@ final class TaskStore {
       visibleCategories: Array(visibleCategories),
       smartListOrder: smartListOrder,
       pinnedHomeSmartLists: Array(pinnedHomeSmartLists),
-      pinnedHomeCategoryIds: Array(pinnedHomeCategoryIds)
+      pinnedHomeCategoryIds: Array(pinnedHomeCategoryIds),
+      journalsLocked: journalsLocked
     )
     let url = getDocumentsDirectory().appendingPathComponent("settings.json")
     do {
@@ -319,6 +323,7 @@ final class TaskStore {
       smartListOrder = settings.smartListOrder
       pinnedHomeSmartLists = settings.pinnedHomeSmartLists
       pinnedHomeCategoryIds = settings.pinnedHomeCategoryIds
+      journalsLocked = settings.journalsLocked
     } catch {
       // Use defaults
       visibleSmartLists = [.today, .all, .flagged]

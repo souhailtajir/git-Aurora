@@ -41,7 +41,6 @@ struct JournalEntryRow: View {
     }
     .padding(.horizontal, 16)
     .padding(.vertical, 14)
-    .glassEffect(.clear)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .glassEffect(.regular)
   }
 }

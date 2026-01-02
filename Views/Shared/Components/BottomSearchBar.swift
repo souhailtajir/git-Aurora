@@ -1,87 +1,52 @@
+//
+//  BottomSearchBar.swift
+//  Aurora
+//
+//  Created by souhail on 1/3/26.
+//
+
 import SwiftUI
 
 struct BottomSearchBar: View {
-  @Binding var text: String
-  @Binding var isSearching: Bool
+  @Binding var searchText: String
+  @Binding var showSearch: Bool
   var placeholder: String = "Search"
-  @FocusState private var isFocused: Bool
+  var focusState: FocusState<Bool>.Binding
 
   var body: some View {
     HStack(spacing: 12) {
+      // Search Field
       HStack(spacing: 8) {
         Image(systemName: "magnifyingglass")
-          .font(.system(size: 18))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(Theme.tint)
 
-        TextField(placeholder, text: $text)
-          .font(.system(size: 17))
-          .textFieldStyle(.plain)
-          .focused($isFocused)
-          .submitLabel(.search)
-
-        if text.isEmpty {
-          Image(systemName: "mic.fill")  // Mic when empty? Or always? Image shows it.
-            .font(.system(size: 14))
-            .foregroundStyle(.secondary)
-        } else {
-          Button {
-            text = ""
-          } label: {
-            Image(systemName: "xmark.circle.fill")
-              .foregroundStyle(.secondary)
-          }
-        }
+        TextField(placeholder, text: $searchText)
+          .focused(focusState)
+          .tint(Theme.tint)
       }
       .padding(.horizontal, 12)
-      .padding(.vertical, 12)
+      .padding(.vertical, 10)
       .glassEffect(.regular)
-      .clipShape(Capsule())
+      .clipShape(RoundedRectangle(cornerRadius: 16))
 
-      if isSearching || !text.isEmpty {
-        Button {
-          withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            text = ""
-            isSearching = false
-            isFocused = false
-          }
-        } label: {
-          Image(systemName: "xmark")
-            .font(.system(size: 16, weight: .semibold))  // The image shows an X, maybe circle?
-          // Image shows (X) in a circle maybe? Or just X.
-          // The image has a close button: (X) circle.
-          // Let's use xmark.circle.fill style for the outside button if that matches?
-          // Wait, standard iOS behavior is "Cancel" text.
-          // The user image shows an `X` button to the right of the search bar.
-          // It looks like a circle button with X.
+      // Cancel Button
+      Button {
+        withAnimation(.easeInOut) {
+          searchText = ""
+          showSearch = false
+          focusState.wrappedValue = false
         }
-        .buttonStyle(.plain)
-        .padding(10)
-        .background(.ultraThinMaterial)
-        .clipShape(Circle())
-        .glassEffect(.regular)
-        .transition(.move(edge: .trailing).combined(with: .opacity))
+      } label: {
+        Image(systemName: "xmark")
+          .font(.system(size: 20, weight: .semibold))
+          .foregroundStyle(.primary)
+          .frame(width: 42, height: 42)
+          .glassEffect(.regular)
+          .clipShape(Circle())
       }
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-
-    .onAppear {
-      if isSearching { isFocused = true }
-    }
-    .onChange(of: isSearching) { _, newValue in
-      if newValue { isFocused = true }
-    }
-    .onChange(of: isFocused) { _, newValue in
-      if newValue {
-        withAnimation { isSearching = true }
-      }
-    }
-  }
-}
-
-#Preview {
-  ZStack(alignment: .bottom) {
-    Color.blue
-    BottomSearchBar(text: .constant(""), isSearching: .constant(true))
+    .padding(.horizontal)
+    .padding(.top, 8)
+    .padding(.bottom, 10)
   }
 }

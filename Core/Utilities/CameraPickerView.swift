@@ -2,7 +2,7 @@
 //  CameraPickerView.swift
 //  Aurora
 //
-//  Created by Antigravity AI on 12/7/25.
+//  Created by souhail on 12/7/25.
 //
 
 import SwiftUI
