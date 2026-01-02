@@ -1,0 +1,195 @@
+//
+//  CategoryTasksView.swift
+//  Aurora
+//
+//  Created by souhail on 12/29/25.
+//
+
+import SwiftUI
+
+/// View for displaying tasks filtered by a smart list type or category
+struct CategoryTasksView: View {
+  @Environment(TaskStore.self) var taskStore
+  @Environment(\.dismiss) var dismiss
+
+  let filterType: CategoryFilter
+  @State private var editingTaskId: UUID? = nil
+  @State private var selectedTaskForDetails: Task? = nil
+  @State private var searchText = ""
+  @FocusState private var focusedTaskId: UUID?
+
+  enum CategoryFilter: Hashable {
+    case smartList(SmartListType)
+    case category(TaskCategory)
+
+    var title: String {
+      switch self {
+      case .smartList(let type): return type.rawValue
+      case .category(let category): return category.name
+      }
+    }
+
+    var tintColor: Color {
+      switch self {
+      case .smartList(let type): return type.tintColor
+      case .category(let category): return Color(hex: category.colorHex)
+      }
+    }
+
+    var icon: String {
+      switch self {
+      case .smartList(let type): return type.icon
+      case .category(let category): return category.iconName
+      }
+    }
+  }
+
+  private var baseTasks: [Task] {
+    switch filterType {
+    case .smartList(let type):
+      switch type {
+      case .today:
+        return taskStore.tasks.filter { task in
+          guard let date = task.date else { return false }
+          return Calendar.current.isDateInToday(date) && !task.isCompleted
+        }
+      case .scheduled:
+        return taskStore.tasks.filter { task in
+          task.date != nil && !task.isCompleted
+        }
+      case .all:
+        return taskStore.tasks.filter { !$0.isCompleted }
+      case .flagged:
+        return taskStore.tasks.filter { $0.isFlagged && !$0.isCompleted }
+      case .completed:
+        return taskStore.tasks.filter { $0.isCompleted }
+      }
+
+    case .category(let category):
+      return taskStore.tasks.filter { $0.category.id == category.id && !$0.isCompleted }
+    }
+  }
+
+  private var filteredTasks: [Task] {
+    if searchText.isEmpty {
+      return baseTasks
+    }
+    return baseTasks.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+  }
+
+  var body: some View {
+    ZStack(alignment: .bottomTrailing) {
+      Color.clear.auroraBackground()
+
+      List {
+        ForEach(filteredTasks) { task in
+          EditableTaskRow(
+            task: task,
+            editingTaskId: $editingTaskId,
+            focusedTaskId: $focusedTaskId,
+            onInfoTap: {
+              selectedTaskForDetails = task
+            }
+          )
+          .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
+        }
+
+        if filteredTasks.isEmpty {
+          emptyStateView
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        }
+
+        // Bottom padding for FAB
+        Color.clear.frame(height: 100)
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
+      }
+      .listStyle(.plain)
+      .scrollContentBackground(.hidden)
+      .scrollIndicators(.hidden)
+      .searchable(text: $searchText, prompt: "Search tasks...")
+
+      // Color-coordinated floating add button
+      addTaskButton
+    }
+    .navigationTitle(Text(filterType.title).foregroundColor(filterType.tintColor))
+    .navigationBarTitleDisplayMode(.large)
+    .toolbarColorScheme(.dark, for: .navigationBar)
+    .toolbar(.hidden, for: .tabBar)
+    .tint(filterType.tintColor)
+    .onTapGesture {
+      // Dismiss keyboard when tapping outside
+      editingTaskId = nil
+      focusedTaskId = nil
+    }
+    .sheet(item: $selectedTaskForDetails) { task in
+      TaskSheet(task: task)
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+  }
+
+  // MARK: - Add Task Button
+
+  private var addTaskButton: some View {
+    Button {
+      addNewTask()
+    } label: {
+      ZStack {
+        Circle()
+          .fill(filterType.tintColor)
+          .frame(width: 56, height: 56)
+
+        Image(systemName: "plus")
+          .font(.system(size: 24, weight: .semibold))
+          .foregroundStyle(.white)
+      }
+      .shadow(color: filterType.tintColor.opacity(0.4), radius: 8, x: 0, y: 4)
+    }
+    .buttonStyle(.plain)
+    .padding(.trailing, 20)
+    .padding(.bottom, 20)
+  }
+
+  private var emptyStateView: some View {
+    VStack(spacing: 12) {
+      Image(systemName: filterType.icon)
+        .font(.system(size: 48))
+        .foregroundStyle(filterType.tintColor.opacity(0.6))
+      Text(searchText.isEmpty ? "No tasks" : "No matching tasks")
+        .font(.system(size: 16, weight: .medium))
+        .foregroundStyle(.primary.opacity(0.6))
+    }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, 60)
+  }
+
+  private func addNewTask() {
+    let category: TaskCategory
+    if case .category(let cat) = filterType {
+      category = cat
+    } else {
+      category = .personal
+    }
+
+    let newTask = Task(title: "", date: Date(), priority: .medium, category: category)
+    taskStore.addTask(newTask)
+
+    // Start editing the new task
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+      editingTaskId = newTask.id
+      focusedTaskId = newTask.id
+    }
+  }
+}
+
+#Preview {
+  NavigationStack {
+    CategoryTasksView(filterType: .smartList(.today))
+      .environment(TaskStore())
+  }
+}
