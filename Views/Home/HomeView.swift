@@ -207,20 +207,26 @@ struct HomeView: View {
 
   // MARK: - Search Results
 
+  @ViewBuilder
   private var searchResultsView: some View {
-    VStack(spacing: 8) {
-      ForEach(searchResults) { task in
-        EditableTaskRow(
-          task: task,
-          editingTaskId: $editingTaskId,
-          focusedTaskId: $focusedTaskId,
-          onInfoTap: {
-            selectedTaskForDetails = task
-          }
-        )
+    if searchResults.isEmpty {
+      ContentUnavailableView.search(text: searchText)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else {
+      VStack(spacing: 8) {
+        ForEach(searchResults) { task in
+          EditableTaskRow(
+            task: task,
+            editingTaskId: $editingTaskId,
+            focusedTaskId: $focusedTaskId,
+            onInfoTap: {
+              selectedTaskForDetails = task
+            }
+          )
+        }
       }
+      .padding(.horizontal, 16)
     }
-    .padding(.horizontal, 16)
   }
 
   private var searchResults: [Task] {

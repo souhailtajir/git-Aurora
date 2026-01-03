@@ -62,28 +62,33 @@ struct AllJournalsView: View {
           searchField
 
           // Grouped entries by month
-          ForEach(groupedEntries, id: \.key) { group in
-            VStack(alignment: .leading, spacing: 8) {
-              // Month header
-              Text(group.key)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Theme.tint)
-                .padding(.horizontal, 4)
-                .padding(.top, 8)
+          if sortedEntries.isEmpty && !searchText.isEmpty {
+            ContentUnavailableView.search(text: searchText)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+          } else {
+            ForEach(groupedEntries, id: \.key) { group in
+              VStack(alignment: .leading, spacing: 8) {
+                // Month header
+                Text(group.key)
+                  .font(.system(size: 14, weight: .semibold))
+                  .foregroundStyle(Theme.tint)
+                  .padding(.horizontal, 4)
+                  .padding(.top, 8)
 
-              // Entries
-              ForEach(group.entries) { entry in
-                Button {
-                  navigationPath.append(entry)
-                } label: {
-                  JournalEntryRow(entry: entry)
-                }
-                .buttonStyle(.plain)
-                .contextMenu {
-                  Button(role: .destructive) {
-                    withAnimation { taskStore.deleteJournalEntry(entry) }
+                // Entries
+                ForEach(group.entries) { entry in
+                  Button {
+                    navigationPath.append(entry)
                   } label: {
-                    Label("Delete", systemImage: "trash")
+                    JournalEntryRow(entry: entry)
+                  }
+                  .buttonStyle(.plain)
+                  .contextMenu {
+                    Button(role: .destructive) {
+                      withAnimation { taskStore.deleteJournalEntry(entry) }
+                    } label: {
+                      Label("Delete", systemImage: "trash")
+                    }
                   }
                 }
               }

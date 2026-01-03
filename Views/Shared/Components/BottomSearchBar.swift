@@ -26,8 +26,8 @@ struct BottomSearchBar: View {
       }
       .padding(.horizontal, 12)
       .padding(.vertical, 10)
-      .glassEffect(.regular)
       .clipShape(RoundedRectangle(cornerRadius: 16))
+      .glassEffect(.regular)
 
       // Cancel Button
       Button {
@@ -41,8 +41,8 @@ struct BottomSearchBar: View {
           .font(.system(size: 20, weight: .semibold))
           .foregroundStyle(.primary)
           .frame(width: 42, height: 42)
-          .glassEffect(.regular)
           .clipShape(Circle())
+          .glassEffect(.regular)
       }
     }
     .padding(.horizontal)

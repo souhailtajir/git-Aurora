@@ -17,7 +17,6 @@ struct JournalView: View {
   @State private var journalsExpanded = true
   @State private var recentEntriesExpanded = true
   @State private var navigationPath = NavigationPath()
-  @State private var selectedInsightsPeriod: InsightsPeriod = .week
 
   private var filteredEntries: [JournalEntry] {
     let sorted = taskStore.journalEntries.sorted(by: { $0.date > $1.date })
@@ -153,10 +152,7 @@ struct JournalView: View {
   private var statsSection: some View {
     VStack(spacing: 12) {
       // GitHub-style activity chart
-      JournalActivityCard(
-        entries: taskStore.journalEntries,
-        selectedPeriod: $selectedInsightsPeriod
-      )
+      JournalActivityCard(entries: taskStore.journalEntries)
 
       // Streak card
       JournalStreakCard(streak: currentStreak)
@@ -310,15 +306,21 @@ struct JournalView: View {
 
   // MARK: - Search Results
 
+  @ViewBuilder
   private var searchResultsView: some View {
-    VStack(spacing: 8) {
-      ForEach(filteredEntries) { entry in
-        Button {
-          navigationPath.append(entry)
-        } label: {
-          JournalEntryRow(entry: entry)
+    if filteredEntries.isEmpty {
+      ContentUnavailableView.search(text: searchText)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    } else {
+      VStack(spacing: 8) {
+        ForEach(filteredEntries) { entry in
+          Button {
+            navigationPath.append(entry)
+          } label: {
+            JournalEntryRow(entry: entry)
+          }
+          .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
       }
     }
   }
