@@ -202,15 +202,32 @@ struct HomeView: View {
 
   private var searchResultsView: some View {
     VStack(spacing: 8) {
-      ForEach(searchResults) { task in
-        EditableTaskRow(
-          task: task,
-          editingTaskId: $editingTaskId,
-          focusedTaskId: $focusedTaskId,
-          onInfoTap: {
-            selectedTaskForDetails = task
-          }
-        )
+      if searchResults.isEmpty {
+        // Empty state when no results found
+        VStack(spacing: 12) {
+          Image(systemName: "magnifyingglass")
+            .font(.system(size: 36))
+            .foregroundStyle(.secondary)
+          Text("No results found")
+            .font(.system(size: 15))
+            .foregroundStyle(.secondary)
+          Text("Try a different search term")
+            .font(.system(size: 13))
+            .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+      } else {
+        ForEach(searchResults) { task in
+          EditableTaskRow(
+            task: task,
+            editingTaskId: $editingTaskId,
+            focusedTaskId: $focusedTaskId,
+            onInfoTap: {
+              selectedTaskForDetails = task
+            }
+          )
+        }
       }
     }
     .padding(.horizontal, 16)

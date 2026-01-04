@@ -6,21 +6,25 @@ struct BottomSearchBar: View {
   var placeholder: String = "Search"
   @FocusState private var isFocused: Bool
 
+  // Aurora purple accent color
+  private let purpleAccent = Color(red: 0.6, green: 0.4, blue: 0.9)
+
   var body: some View {
     HStack(spacing: 12) {
       HStack(spacing: 8) {
         Image(systemName: "magnifyingglass")
-          .font(.system(size: 18))
-          .foregroundStyle(.secondary)
+          .font(.system(size: 18, weight: .medium))
+          .foregroundStyle(purpleAccent)
 
         TextField(placeholder, text: $text)
           .font(.system(size: 17))
           .textFieldStyle(.plain)
           .focused($isFocused)
           .submitLabel(.search)
+          .tint(purpleAccent)
 
         if text.isEmpty {
-          Image(systemName: "mic.fill")  // Mic when empty? Or always? Image shows it.
+          Image(systemName: "mic.fill")
             .font(.system(size: 14))
             .foregroundStyle(.secondary)
         } else {
@@ -28,8 +32,10 @@ struct BottomSearchBar: View {
             text = ""
           } label: {
             Image(systemName: "xmark.circle.fill")
-              .foregroundStyle(.secondary)
+              .font(.system(size: 16))
+              .foregroundStyle(purpleAccent.opacity(0.7))
           }
+          .buttonStyle(.plain)
         }
       }
       .padding(.horizontal, 12)
@@ -39,32 +45,21 @@ struct BottomSearchBar: View {
 
       if isSearching || !text.isEmpty {
         Button {
-          withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-            text = ""
-            isSearching = false
-            isFocused = false
-          }
+          dismissSearch()
         } label: {
           Image(systemName: "xmark")
-            .font(.system(size: 16, weight: .semibold))  // The image shows an X, maybe circle?
-          // Image shows (X) in a circle maybe? Or just X.
-          // The image has a close button: (X) circle.
-          // Let's use xmark.circle.fill style for the outside button if that matches?
-          // Wait, standard iOS behavior is "Cancel" text.
-          // The user image shows an `X` button to the right of the search bar.
-          // It looks like a circle button with X.
+            .font(.system(size: 16, weight: .bold))
+            .foregroundStyle(purpleAccent)
         }
-        .buttonStyle(.plain)
-        .padding(10)
-        .background(.ultraThinMaterial)
-        .clipShape(Circle())
+        .frame(width: 44, height: 44)
+        .contentShape(Circle())
         .glassEffect(.regular)
+        .clipShape(Circle())
         .transition(.move(edge: .trailing).combined(with: .opacity))
       }
     }
     .padding(.horizontal, 16)
     .padding(.vertical, 12)
-
     .onAppear {
       if isSearching { isFocused = true }
     }
@@ -75,6 +70,18 @@ struct BottomSearchBar: View {
       if newValue {
         withAnimation { isSearching = true }
       }
+    }
+  }
+
+  private func dismissSearch() {
+    // Dismiss keyboard first
+    UIApplication.shared.sendAction(
+      #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+
+    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+      text = ""
+      isSearching = false
+      isFocused = false
     }
   }
 }
