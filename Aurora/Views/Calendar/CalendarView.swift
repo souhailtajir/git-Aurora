@@ -14,10 +14,9 @@ struct CalendarView: View {
   @State private var editingTaskId: UUID? = nil
   @State private var selectedTaskForDetails: Task? = nil
   @FocusState private var focusedTaskId: UUID?
-  @FocusState private var searchFocused: Bool
   @State private var searchText = ""
   @State private var agendaExpanded = true
-  @State private var showSearch = false
+  @State private var isSearching = false
   @Namespace private var namespace
   @State private var showingSettings = false
   @State private var showingNewTask = false
@@ -41,23 +40,17 @@ struct CalendarView: View {
       .toolbarTitleDisplayMode(.inlineLarge)
       .safeAreaPadding(.top, 8)
       .safeAreaInset(edge: .bottom) {
-        if showSearch {
-          BottomSearchBar(
-            searchText: $searchText,
-            showSearch: $showSearch,
-            placeholder: "Search...",
-            focusState: $searchFocused
-          )
-          .transition(.move(edge: .bottom).combined(with: .opacity))
+        if isSearching {
+          BottomSearchBar(text: $searchText, isSearching: $isSearching)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
         }
       }
-      .animation(.easeInOut(duration: 0.25), value: showSearch)
+      .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSearching)
       .toolbar {
         ToolbarItemGroup(placement: .topBarTrailing) {
           Button("Search", systemImage: "magnifyingglass") {
-            withAnimation(.easeInOut) {
-              showSearch = true
-              searchFocused = true
+            withAnimation {
+              isSearching = true
             }
           }
         }
