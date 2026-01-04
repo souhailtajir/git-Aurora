@@ -1,1 +1,114 @@
+# =================================
+# Swift & Xcode .gitignore
+# =================================
+
+## ---- Build & DerivedData ----
+build/
+DerivedData/
+*.build/
+
+## ---- Xcode User Data ----
+*.xcuserstate
+*.xcuserdatad/
+*.xccheckout
+xcuserdata/
+*.xcscmblueprint
+*.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+
+## ---- Swift Package Manager ----
+.swiftpm/
+Package.resolved
+Packages/
+.build/
+
+## ---- Playgrounds ----
+timeline.xctimeline
+playground.xcworkspace
+
+## ---- Archives ----
+*.xcarchive/
+
+## ---- Code Injection ----
+iOSInjectionProject/
+
+## ---- CocoaPods ----
+Pods/
+Podfile.lock
+
+## ---- Carthage ----
+Carthage/Build/
+Carthage/Checkouts/
+
+## ---- Fastlane ----
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+## ---- Code Coverage ----
+*.gcda
+*.gcno
+*.gcov
+
+## ---- OS Generated Files ----
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+## ---- IDE & Editor ----
+.idea/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## ---- Environment & Secrets ----
+.env
+.env.*
+*.pem
+*.p12
+*.mobileprovision
+
+# =================================
+# Assets (Too Large for Git)
+# =================================
+*.png
 *.jpg
+*.jpeg
+*.gif
+*.webp
+*.heic
+*.heif
+*.tiff
+*.bmp
+*.svg
+*.pdf
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mp3
+*.wav
+*.aiff
+*.m4a
+*.ttf
+*.otf
+*.woff
+*.woff2
+*.usdz
+*.reality
+*.scn
+
+## ---- Asset Catalogs (optional - uncomment if needed) ----
+# Assets.xcassets/
+
+## ---- Large Data Files ----
+*.sqlite
+*.realm
+*.db
