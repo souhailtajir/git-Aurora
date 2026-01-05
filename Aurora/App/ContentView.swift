@@ -11,7 +11,6 @@ struct ContentView: View {
   @Environment(TaskStore.self) var taskStore
   @State private var selectedTab: Int = 0
   @State private var showingAddTask = false
-  @State private var showingAddJournal = false
 
   var body: some View {
     ZStack(alignment: .top) {
@@ -63,9 +62,10 @@ struct ContentView: View {
           selectedTab = oldValue
         }
 
-        // Show appropriate sheet
+        // Trigger appropriate action
         if oldValue == 2 {
-          showingAddJournal = true
+          // Trigger journal add via TaskStore (handled in JournalView)
+          taskStore.addJournalTrigger = true
         } else {
           showingAddTask = true
         }
@@ -73,11 +73,6 @@ struct ContentView: View {
     }
     .sheet(isPresented: $showingAddTask) {
       TaskSheet()
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
-    }
-    .sheet(isPresented: $showingAddJournal) {
-      AddJournalView()
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }

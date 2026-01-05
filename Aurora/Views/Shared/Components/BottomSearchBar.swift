@@ -10,65 +10,57 @@ struct BottomSearchBar: View {
   private let purpleAccent = Color(red: 0.6, green: 0.4, blue: 0.9)
 
   var body: some View {
-    HStack(spacing: 12) {
-      HStack(spacing: 8) {
-        Image(systemName: "magnifyingglass")
-          .font(.system(size: 18, weight: .medium))
-          .foregroundStyle(purpleAccent)
+    GlassEffectContainer {
+      HStack(spacing: 12) {
+        // Search field in glass capsule
+        HStack(spacing: 10) {
+          Image(systemName: "magnifyingglass")
+            .font(.system(size: 18, weight: .medium))
+            .foregroundStyle(Theme.primary)
 
-        TextField(placeholder, text: $text)
-          .font(.system(size: 17))
-          .textFieldStyle(.plain)
-          .focused($isFocused)
-          .submitLabel(.search)
-          .tint(purpleAccent)
+          TextField(placeholder, text: $text)
+            .font(.system(size: 17))
+            .textFieldStyle(.plain)
+            .focused($isFocused)
+            .submitLabel(.search)
+            .tint(purpleAccent)
 
-        if text.isEmpty {
+          Spacer()
+
+          // Mic icon on the right side of the field
           Image(systemName: "mic.fill")
-            .font(.system(size: 14))
+            .font(.system(size: 16))
             .foregroundStyle(.secondary)
-        } else {
-          Button {
-            text = ""
-          } label: {
-            Image(systemName: "xmark.circle.fill")
-              .font(.system(size: 16))
-              .foregroundStyle(purpleAccent.opacity(0.7))
-          }
-          .buttonStyle(.plain)
         }
-      }
-      .padding(.horizontal, 12)
-      .padding(.vertical, 12)
-      .glassEffect(.regular)
-      .clipShape(Capsule())
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .glassEffect(.regular.interactive())
+        .clipShape(Capsule())
 
-      if isSearching || !text.isEmpty {
-        Button {
-          dismissSearch()
-        } label: {
+        // Circular X dismiss button (separate from search field)
+        Button(action: dismissSearch) {
           Image(systemName: "xmark")
-            .font(.system(size: 16, weight: .bold))
-            .foregroundStyle(purpleAccent)
+            .font(.system(size: 18))
+            .foregroundStyle(Theme.primary)
         }
+        .buttonStyle(.plain)
         .frame(width: 44, height: 44)
         .contentShape(Circle())
-        .glassEffect(.regular)
+        .glassEffect(.regular.interactive())
         .clipShape(Circle())
-        .transition(.move(edge: .trailing).combined(with: .opacity))
       }
-    }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-    .onAppear {
-      if isSearching { isFocused = true }
-    }
-    .onChange(of: isSearching) { _, newValue in
-      if newValue { isFocused = true }
-    }
-    .onChange(of: isFocused) { _, newValue in
-      if newValue {
-        withAnimation { isSearching = true }
+      .padding(.horizontal, 16)
+      .padding(.vertical, 12)
+      .onAppear {
+        if isSearching { isFocused = true }
+      }
+      .onChange(of: isSearching) { _, newValue in
+        if newValue { isFocused = true }
+      }
+      .onChange(of: isFocused) { _, newValue in
+        if newValue {
+          withAnimation { isSearching = true }
+        }
       }
     }
   }
@@ -88,7 +80,7 @@ struct BottomSearchBar: View {
 
 #Preview {
   ZStack(alignment: .bottom) {
-    Color.blue
+    Color.black.ignoresSafeArea()
     BottomSearchBar(text: .constant(""), isSearching: .constant(true))
   }
 }

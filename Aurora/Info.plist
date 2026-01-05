@@ -8,5 +8,7 @@
 	</array>
 	<key>NSAlarmKitUsageDescription</key>
 	<string>We need alarm access to remind you about your tasks at the scheduled time</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Unlock your journal with Face ID</string>
 </dict>
 </plist>

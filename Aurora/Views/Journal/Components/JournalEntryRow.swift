@@ -2,46 +2,67 @@
 //  JournalEntryRow.swift
 //  Aurora
 //
-//  Created by antigravity on 12/24/25.
+//  Entry row matching TasksView styling
 //
 
 import SwiftUI
 
 struct JournalEntryRow: View {
+  @Environment(TaskStore.self) var taskStore
   let entry: JournalEntry
+  let onTap: () -> Void
+
+  private var timeText: String {
+    entry.date.formatted(.dateTime.hour().minute())
+  }
 
   var body: some View {
-    HStack(spacing: 12) {
-      // Color indicator
-      RoundedRectangle(cornerRadius: 2)
-        .fill(Theme.tint)
-        .frame(width: 4, height: 32)
-
-      // Content
-      VStack(alignment: .leading, spacing: 4) {
+    Button(action: onTap) {
+      HStack(spacing: 12) {
+        // Title
         Text(entry.title.isEmpty ? "Untitled" : entry.title)
-          .font(.system(size: 15, weight: .medium))
-          .foregroundStyle(Theme.primary)
+          .font(.system(size: 16, weight: .medium))
+          .foregroundStyle(.primary)
           .lineLimit(1)
 
-        if !entry.body.isEmpty {
-          Text(entry.body)
-            .font(.system(size: 13))
-            .foregroundStyle(Theme.secondary)
-            .lineLimit(1)
-        }
+        Spacer()
+
+        // Time
+        Text(timeText)
+          .font(.system(size: 14))
+          .foregroundStyle(.secondary)
       }
-
-      Spacer()
-
-      // Date/Time
-      Text(entry.date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
-        .font(.system(size: 12, weight: .medium))
-        .foregroundStyle(Theme.secondary.opacity(0.7))
+      .padding(.horizontal, 16)
+      .padding(.vertical, 14)
+      .glassEffect(.regular)
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 14)
-    .glassEffect(.clear)
-    .clipShape(RoundedRectangle(cornerRadius: 16))
+    .buttonStyle(.plain)
+    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+      Button(role: .destructive) {
+        withAnimation {
+          taskStore.deleteJournalEntry(entry)
+        }
+      } label: {
+        Label("Delete", systemImage: "trash")
+      }
+    }
+  }
+}
+
+#Preview {
+  ZStack {
+    Color.black.ignoresSafeArea()
+    VStack(spacing: 8) {
+      JournalEntryRow(
+        entry: JournalEntry(title: "Morning Thoughts", body: "", date: Date()),
+        onTap: {}
+      )
+      JournalEntryRow(
+        entry: JournalEntry(title: "", body: "", date: Date()),
+        onTap: {}
+      )
+    }
+    .padding()
+    .environment(TaskStore())
   }
 }
