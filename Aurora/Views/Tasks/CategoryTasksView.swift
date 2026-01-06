@@ -128,7 +128,7 @@ struct CategoryTasksView: View {
     }
     .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSearching)
     .navigationTitle(Text(filterType.title).foregroundColor(filterType.tintColor))
-    .navigationBarTitleDisplayMode(.large)
+    .navigationBarTitleDisplayMode(.automatic)
     .toolbarColorScheme(.dark, for: .navigationBar)
     .toolbar(.hidden, for: .tabBar)
     .toolbar {

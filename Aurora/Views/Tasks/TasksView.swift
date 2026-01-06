@@ -14,7 +14,6 @@ struct TasksView: View {
   @FocusState private var focusedTaskId: UUID?
   @State private var showingSmartLists = false
   @State private var showingCategories = false
-  @State private var showingSettings = false
   @State private var showingNewTask = false
   @State private var searchText = ""
   @State private var isSearching = false
@@ -73,8 +72,8 @@ struct TasksView: View {
         }
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Settings", systemImage: "gearshape") {
-            showingSettings = true
+          NavigationLink(value: "settings") {
+            Image(systemName: "gearshape")
           }
         }
       }
@@ -94,9 +93,10 @@ struct TasksView: View {
           .presentationDetents([.medium, .large])
           .presentationDragIndicator(.visible)
       }
-      .sheet(isPresented: $showingSettings) {
-        SettingsView()
-          .presentationDragIndicator(.visible)
+      .navigationDestination(for: String.self) { destination in
+        if destination == "settings" {
+          SettingsView()
+        }
       }
       .sheet(isPresented: $showingNewTask) {
         TaskSheet()
@@ -274,8 +274,8 @@ struct TasksView: View {
   // MARK: - Search Results
 
   private var searchResultsView: some View {
-      VStack(spacing: 8) {
-     if searchResults.isEmpty {
+    VStack(spacing: 8) {
+      if searchResults.isEmpty {
         VStack(spacing: 12) {
           Image(systemName: "magnifyingglass")
             .font(.system(size: 36))
@@ -290,13 +290,13 @@ struct TasksView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
       } else {
-      ForEach(searchResults) { task in
-        EditableTaskRow(
-          task: task,
-          editingTaskId: $editingTaskId,
-          focusedTaskId: $focusedTaskId,
-          onInfoTap: {
-            selectedTaskForDetails = task
+        ForEach(searchResults) { task in
+          EditableTaskRow(
+            task: task,
+            editingTaskId: $editingTaskId,
+            focusedTaskId: $focusedTaskId,
+            onInfoTap: {
+              selectedTaskForDetails = task
             }
           )
         }

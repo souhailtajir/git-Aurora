@@ -87,7 +87,7 @@ struct DeletedEntriesView: View {
           }
         }
       }
-        ToolbarSpacer(placement: .topBarTrailing)
+      ToolbarSpacer(placement: .topBarTrailing)
 
       ToolbarItem(placement: .topBarTrailing) {
         Button("Search", systemImage: "magnifyingglass") {
@@ -118,135 +118,112 @@ struct DeletedEntriesView: View {
   // MARK: - Bottom Action Bar
 
   private var bottomActionBar: some View {
-    ZStack {
-      // Outer container with glass effect
-      ConcentricRectangle()
-        .glassEffect(.clear)
-
-      // Inner content with concentric buttons
-      HStack(spacing: 12) {
-        if isSelecting && !selectedEntries.isEmpty {
-          // Selected items actions
-          Button {
-            withAnimation {
-              for entryId in selectedEntries {
-                if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId }) {
-                  taskStore.restoreJournalEntry(entry)
-                }
-              }
-              selectedEntries.removeAll()
-              if taskStore.deletedJournalEntries.isEmpty {
-                isSelecting = false
-              }
-            }
-          } label: {
-            HStack(spacing: 8) {
-              Image(systemName: "arrow.uturn.backward")
-              Text("Recover (\(selectedEntries.count))")
-            }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background {
-              ConcentricRectangle(corners: .concentric, isUniform: true)
-                .fill(Theme.tint)
-            }
-          }
-
-          Button {
-            withAnimation {
-              for entryId in selectedEntries {
-                if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId }) {
-                  taskStore.permanentlyDeleteJournalEntry(entry)
-                }
-              }
-              selectedEntries.removeAll()
-              if taskStore.deletedJournalEntries.isEmpty {
-                isSelecting = false
-              }
-            }
-          } label: {
-            HStack(spacing: 8) {
-              Image(systemName: "trash")
-              Text("Delete (\(selectedEntries.count))")
-            }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background {
-              ConcentricRectangle(corners: .concentric, isUniform: true)
-                .fill(.red)
-            }
-          }
-        } else if isSelecting {
-          // Selecting mode but nothing selected - show cancel
-          Button {
-            withAnimation {
-              isSelecting = false
-              selectedEntries.removeAll()
-            }
-          } label: {
-            Text("Cancel")
-              .font(.system(size: 16, weight: .semibold))
-              .foregroundStyle(Theme.tint)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 14)
-              .background {
-                ConcentricRectangle(corners: .concentric, isUniform: true)
-                  .fill(.thinMaterial)
-              }
-          }
-        } else {
-          // Not selecting - show Recover All / Delete All
-          Button {
-            withAnimation {
-              for entry in taskStore.deletedJournalEntries {
+    HStack(spacing: 12) {
+      if isSelecting && !selectedEntries.isEmpty {
+        // Selected items actions
+        Button {
+          withAnimation {
+            for entryId in selectedEntries {
+              if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId }) {
                 taskStore.restoreJournalEntry(entry)
               }
             }
-          } label: {
-            HStack(spacing: 8) {
-              Image(systemName: "arrow.uturn.backward")
-              Text("Recover All")
-            }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background {
-              ConcentricRectangle(corners: .concentric, isUniform: true)
-                .fill(Theme.tint)
+            selectedEntries.removeAll()
+            if taskStore.deletedJournalEntries.isEmpty {
+              isSelecting = false
             }
           }
+        } label: {
+          HStack(spacing: 8) {
+            Image(systemName: "arrow.uturn.backward")
+            Text("Recover (\(selectedEntries.count))")
+          }
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 14)
+          .background(Theme.tint, in: .rect(cornerRadius: 20))
+        }
 
-          Button {
-            withAnimation {
-              for entry in taskStore.deletedJournalEntries {
+        Button {
+          withAnimation {
+            for entryId in selectedEntries {
+              if let entry = taskStore.deletedJournalEntries.first(where: { $0.id == entryId }) {
                 taskStore.permanentlyDeleteJournalEntry(entry)
               }
             }
-          } label: {
-            HStack(spacing: 8) {
-              Image(systemName: "trash")
-              Text("Delete All")
-            }
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background {
-              ConcentricRectangle(corners: .concentric, isUniform: true)
-                .fill(.red)
+            selectedEntries.removeAll()
+            if taskStore.deletedJournalEntries.isEmpty {
+              isSelecting = false
             }
           }
+        } label: {
+          HStack(spacing: 8) {
+            Image(systemName: "trash")
+            Text("Delete (\(selectedEntries.count))")
+          }
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 14)
+          .background(.red, in: .rect(cornerRadius: 20))
+        }
+      } else if isSelecting {
+        // Selecting mode but nothing selected - show cancel
+        Button {
+          withAnimation {
+            isSelecting = false
+            selectedEntries.removeAll()
+          }
+        } label: {
+          Text("Cancel")
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundStyle(Theme.tint)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .background(.ultraThinMaterial, in: .rect(cornerRadius: 20))
+        }
+      } else {
+        // Not selecting - show Recover All / Delete All
+        Button {
+          withAnimation {
+            for entry in taskStore.deletedJournalEntries {
+              taskStore.restoreJournalEntry(entry)
+            }
+          }
+        } label: {
+          HStack(spacing: 8) {
+            Image(systemName: "arrow.uturn.backward")
+            Text("Recover All")
+          }
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 14)
+          .background(Theme.tint, in: .rect(cornerRadius: 20))
+        }
+
+        Button {
+          withAnimation {
+            for entry in taskStore.deletedJournalEntries {
+              taskStore.permanentlyDeleteJournalEntry(entry)
+            }
+          }
+        } label: {
+          HStack(spacing: 8) {
+            Image(systemName: "trash")
+            Text("Delete All")
+          }
+          .font(.system(size: 16, weight: .semibold))
+          .foregroundStyle(.white)
+          .frame(maxWidth: .infinity)
+          .padding(.vertical, 14)
+          .background(.red, in: .rect(cornerRadius: 20))
         }
       }
-      .padding(12)
     }
-    .containerShape(.rect(cornerRadius: 28))
-    .frame(height: 72)
+    .padding(12)
+    .glassEffect(.regular, in: .capsule)
     .padding(.horizontal, 16)
     .padding(.bottom, 8)
   }
@@ -283,17 +260,24 @@ struct DeletedEntriesView: View {
 
         Spacer()
 
-        // Show checkmark when selected
-        if selectedEntries.contains(entry.id) {
-          Image(systemName: "checkmark")
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(Theme.tint)
+        // Show selection indicator only in selection mode
+        if isSelecting {
+          if selectedEntries.contains(entry.id) {
+            Image(systemName: "checkmark.circle.fill")
+              .font(.system(size: 22))
+              .foregroundStyle(Theme.tint)
+          } else {
+            Image(systemName: "circle")
+              .font(.system(size: 22))
+              .foregroundStyle(.secondary.opacity(0.5))
+          }
         }
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 12)
-      .glassEffect(.regular)
+      .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .glassEffect(.regular)
   }
 }

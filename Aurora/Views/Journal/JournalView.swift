@@ -12,7 +12,6 @@ struct JournalView: View {
   @Environment(TaskStore.self) var taskStore
   @State private var searchText = ""
   @State private var isSearching = false
-  @State private var showingSettings = false
   @State private var navigationPath = NavigationPath()
   @State private var isLocked = false
   @State private var showNewEntryFullScreen = false
@@ -63,8 +62,8 @@ struct JournalView: View {
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Settings", systemImage: "gearshape") {
-            showingSettings = true
+          NavigationLink(value: "settings") {
+            Image(systemName: "gearshape")
           }
         }
       }
@@ -93,8 +92,10 @@ struct JournalView: View {
       .navigationDestination(for: JournalEntry.self) { entry in
         EntryEditorView(entryId: entry.id)
       }
-      .sheet(isPresented: $showingSettings) {
-        SettingsView()
+      .navigationDestination(for: String.self) { destination in
+        if destination == "settings" {
+          SettingsView()
+        }
       }
     }
   }

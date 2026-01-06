@@ -8,131 +8,121 @@
 import SwiftUI
 
 struct SettingsView: View {
-  @Environment(\.dismiss) private var dismiss
   @Environment(UserProfileStore.self) private var userProfileStore
   @State private var showingBirthDatePicker = false
-  @State private var showingAppearanceSettings = false
-  @State private var showingNotificationSettings = false
 
   var body: some View {
-    NavigationStack {
-      ZStack {
-        Theme.auroraBackground
+    ScrollView(showsIndicators: false) {
+      VStack(spacing: 24) {
+        // Hero Profile Section
+        HeroProfileView(
+          profile: userProfileStore.profile,
+          onEdit: { showingBirthDatePicker = true }
+        )
 
-        ScrollView(showsIndicators: false) {
-          VStack(spacing: 24) {
-            // Hero Profile Section
-            HeroProfileView(
-              profile: userProfileStore.profile,
-              onEdit: { showingBirthDatePicker = true }
+        // Display Preferences
+        SettingsSection(title: "Display") {
+          VStack(spacing: 0) {
+            PickerRow(
+              icon: "sparkles",
+              iconColor: .purple,
+              title: "Celestial Mode",
+              selection: Binding(
+                get: { userProfileStore.profile.celestialDisplayMode },
+                set: { userProfileStore.updateCelestialDisplayMode($0) }
+              )
+            )
+          }
+          .glassEffect(.regular)
+        }
+
+        // App Settings
+        SettingsSection(title: "App Settings") {
+          VStack(spacing: 0) {
+            NavigationLink(value: SettingsDestination.appearance) {
+              SettingsRow(
+                icon: "paintbrush.fill",
+                iconColor: .blue,
+                title: "Appearance",
+                value: "System"
+              )
+            }
+            .buttonStyle(.plain)
+
+            CustomDivider()
+
+            NavigationLink(value: SettingsDestination.notifications) {
+              SettingsRow(
+                icon: "bell.fill",
+                iconColor: .red,
+                title: "Notifications",
+                value: "Enabled"
+              )
+            }
+            .buttonStyle(.plain)
+          }
+          .glassEffect(.regular)
+        }
+
+        // About
+        SettingsSection(title: "About") {
+          VStack(spacing: 0) {
+            SettingsRow(
+              icon: "info.circle.fill",
+              iconColor: .gray,
+              title: "Version",
+              value: "1.0.0",
+              showChevron: false
             )
 
-            // Display Preferences
-            SettingsSection(title: "Display") {
-              VStack(spacing: 0) {
-                PickerRow(
-                  icon: "sparkles",
-                  iconColor: .purple,
-                  title: "Celestial Mode",
-                  selection: Binding(
-                    get: { userProfileStore.profile.celestialDisplayMode },
-                    set: { userProfileStore.updateCelestialDisplayMode($0) }
-                  )
-                )
+            CustomDivider()
+
+            Button {
+              if let url = URL(string: "https://example.com/privacy") {
+                UIApplication.shared.open(url)
               }
+            } label: {
+              SettingsRow(
+                icon: "hand.raised.fill",
+                iconColor: .green,
+                title: "Privacy Policy",
+                value: ""
+              )
             }
-
-            // App Settings
-            SettingsSection(title: "App Settings") {
-              VStack(spacing: 0) {
-                Button {
-                  showingAppearanceSettings = true
-                } label: {
-                  SettingsRow(
-                    icon: "paintbrush.fill",
-                    iconColor: .blue,
-                    title: "Appearance",
-                    value: "System"
-                  )
-                }
-                .buttonStyle(.plain)
-
-                CustomDivider()
-
-                Button {
-                  showingNotificationSettings = true
-                } label: {
-                  SettingsRow(
-                    icon: "bell.fill",
-                    iconColor: .red,
-                    title: "Notifications",
-                    value: "Enabled"
-                  )
-                }
-                .buttonStyle(.plain)
-              }
-            }
-
-            // About
-            SettingsSection(title: "About") {
-              VStack(spacing: 0) {
-                SettingsRow(
-                  icon: "info.circle.fill",
-                  iconColor: .gray,
-                  title: "Version",
-                  value: "1.0.0",
-                  showChevron: false
-                )
-
-                CustomDivider()
-
-                Button {
-                  if let url = URL(string: "https://example.com/privacy") {
-                    UIApplication.shared.open(url)
-                  }
-                } label: {
-                  SettingsRow(
-                    icon: "hand.raised.fill",
-                    iconColor: .green,
-                    title: "Privacy Policy",
-                    value: ""
-                  )
-                }
-                .buttonStyle(.plain)
-              }
-            }
+            .buttonStyle(.plain)
           }
-          .padding(.horizontal, 16)
-          .padding(.top, 20)
-          .padding(.bottom, 100)
+          .glassEffect(.regular)
         }
       }
-      .navigationTitle("Settings")
-      .navigationBarTitleDisplayMode(.large)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button {
-            dismiss()
-          } label: {
-            ZStack {
-              Image(systemName: "xmark")
-                    .foregroundStyle(Theme.primary)
-            }
-          }
-        }
-      }
-      .sheet(isPresented: $showingBirthDatePicker) {
-        BirthDatePickerView(
-          userProfileStore: userProfileStore, isPresented: $showingBirthDatePicker)
-      }
-      .sheet(isPresented: $showingAppearanceSettings) {
-        AppearanceSettingsView(isPresented: $showingAppearanceSettings)
-      }
-      .sheet(isPresented: $showingNotificationSettings) {
-        NotificationSettingsView(isPresented: $showingNotificationSettings)
+      .padding(.horizontal, 16)
+      .padding(.top, 20)
+      .padding(.bottom, 100)
+    }
+    .background(Color.clear.auroraBackground())
+    .navigationTitle("Settings")
+    .toolbarTitleDisplayMode(.inlineLarge)
+    .safeAreaPadding(.top, 8)
+    .toolbar(.hidden, for: .tabBar)
+    .sheet(isPresented: $showingBirthDatePicker) {
+      BirthDatePickerView(
+        userProfileStore: userProfileStore, isPresented: $showingBirthDatePicker)
+    }
+    .navigationDestination(for: SettingsDestination.self) { destination in
+      switch destination {
+      case .appearance:
+        AppearanceSettingsView()
+      case .notifications:
+        NotificationSettingsView()
       }
     }
   }
+}
+
+// MARK: - Settings Destination
+
+enum SettingsDestination: Hashable {
+  case appearance
+  case notifications
 }
 
 // MARK: - Components
@@ -204,8 +194,7 @@ struct HeroProfileView: View {
     }
     .frame(maxWidth: .infinity)
     .padding(24)
-    .background(.regularMaterial)  // Slightly stronger material for hero
-    .clipShape(RoundedRectangle(cornerRadius: 24))
+    .glassEffect(.regular)
   }
 }
 
@@ -226,12 +215,7 @@ struct SettingsSection<Content: View>: View {
         .textCase(.uppercase)
         .padding(.leading, 8)
 
-      VStack(spacing: 0) {
-        content
-      }
-      .padding(.vertical, 4)
-      .background(.regularMaterial)  // Native-like background
-      .clipShape(RoundedRectangle(cornerRadius: 16))
+      content
     }
   }
 }
@@ -244,20 +228,14 @@ struct SettingsRow: View {
   var showChevron: Bool = true
 
   var body: some View {
-    HStack(spacing: 14) {
-      // Icon Container
-      ZStack {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(iconColor)
-          .frame(width: 32, height: 32)
-
-        Image(systemName: icon)
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundStyle(.white)
-      }
+    HStack(spacing: 12) {
+      Image(systemName: icon)
+        .font(.system(size: 20, weight: .medium))
+        .foregroundStyle(iconColor)
+        .frame(width: 24)
 
       Text(title)
-        .font(.system(size: 16, weight: .regular))
+        .font(.system(size: 16, weight: .medium))
         .foregroundStyle(.primary)
 
       Spacer()
@@ -270,13 +248,13 @@ struct SettingsRow: View {
 
       if showChevron {
         Image(systemName: "chevron.right")
-          .font(.system(size: 14, weight: .semibold))
+          .font(.system(size: 12, weight: .semibold))
           .foregroundStyle(.tertiary)
       }
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-    .contentShape(Rectangle())  // Better tap area
+    .padding(.horizontal, 20)
+    .padding(.vertical, 14)
+    .contentShape(Rectangle())
   }
 }
 
@@ -287,19 +265,14 @@ struct PickerRow: View {
   @Binding var selection: CelestialDisplayMode
 
   var body: some View {
-    HStack(spacing: 14) {
-      ZStack {
-        RoundedRectangle(cornerRadius: 8)
-          .fill(iconColor)
-          .frame(width: 32, height: 32)
-
-        Image(systemName: icon)
-          .font(.system(size: 16, weight: .semibold))
-          .foregroundStyle(.white)
-      }
+    HStack(spacing: 12) {
+      Image(systemName: icon)
+        .font(.system(size: 20, weight: .medium))
+        .foregroundStyle(iconColor)
+        .frame(width: 24)
 
       Text(title)
-        .font(.system(size: 16, weight: .regular))
+        .font(.system(size: 16, weight: .medium))
         .foregroundStyle(.primary)
 
       Spacer()
@@ -308,65 +281,87 @@ struct PickerRow: View {
         Text("Planet").tag(CelestialDisplayMode.zodiacPlanet)
         Text("Moon").tag(CelestialDisplayMode.moonPhase)
       }
-      .pickerStyle(.menu)  // Specific native look
+      .pickerStyle(.menu)
       .tint(.secondary)
     }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 8)  // Slightly less vertical padding for Picker alignment
+    .padding(.horizontal, 20)
+    .padding(.vertical, 14)
   }
 }
 
 struct CustomDivider: View {
   var body: some View {
     Divider()
-      .padding(.leading, 62)  // Aligns with text start
+      .padding(.leading, 56)
   }
 }
 
 // MARK: - Appearance Settings View
 
 struct AppearanceSettingsView: View {
-  @Binding var isPresented: Bool
   @State private var selectedAppearance = "System"
 
   var body: some View {
-    NavigationStack {
-      ZStack {
-        Theme.auroraBackground
+    ScrollView(showsIndicators: false) {
+      VStack(alignment: .leading, spacing: 16) {
+        Text("APPEARANCE MODE")
+          .font(.system(size: 13, weight: .semibold))
+          .foregroundStyle(.secondary)
+          .padding(.leading, 8)
 
-        List {
-          Section {
-            ForEach(["Light", "Dark", "System"], id: \.self) { option in
-              Button {
-                selectedAppearance = option
-              } label: {
-                HStack {
-                  Text(option)
-                    .foregroundStyle(.primary)
-                  Spacer()
-                  if selectedAppearance == option {
-                    Image(systemName: "checkmark")
-                      .foregroundStyle(Theme.secondary)
-                  }
+        VStack(spacing: 0) {
+          ForEach(["Light", "Dark", "System"], id: \.self) { option in
+            Button {
+              selectedAppearance = option
+            } label: {
+              HStack {
+                Image(systemName: iconForAppearance(option))
+                  .font(.system(size: 18))
+                  .foregroundStyle(Theme.secondary)
+                  .frame(width: 24)
+
+                Text(option)
+                  .font(.system(size: 16))
+                  .foregroundStyle(.primary)
+
+                Spacer()
+
+                if selectedAppearance == option {
+                  Image(systemName: "checkmark")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.secondary)
                 }
               }
+              .padding(.horizontal, 20)
+              .padding(.vertical, 14)
+              .contentShape(Rectangle())
             }
-          } header: {
-            Text("Appearance Mode")
+            .buttonStyle(.plain)
+
+            if option != "System" {
+              Divider()
+                .padding(.leading, 56)
+            }
           }
         }
-        .scrollContentBackground(.hidden)
+        .glassEffect(.regular)
       }
-      .navigationTitle("Appearance")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("Done") {
-            isPresented = false
-          }
-          .foregroundStyle(Theme.secondary)
-        }
-      }
+      .padding(.horizontal, 16)
+      .padding(.top, 20)
+      .padding(.bottom, 100)
+    }
+    .background(Color.clear.auroraBackground())
+    .navigationTitle("Appearance")
+    .toolbarTitleDisplayMode(.inlineLarge)
+    .safeAreaPadding(.top, 8)
+    .toolbar(.hidden, for: .tabBar)
+  }
+
+  private func iconForAppearance(_ option: String) -> String {
+    switch option {
+    case "Light": return "sun.max.fill"
+    case "Dark": return "moon.fill"
+    default: return "circle.lefthalf.filled"
     }
   }
 }
@@ -374,44 +369,96 @@ struct AppearanceSettingsView: View {
 // MARK: - Notification Settings View
 
 struct NotificationSettingsView: View {
-  @Binding var isPresented: Bool
   @State private var notificationsEnabled = true
   @State private var dailyReminders = true
   @State private var taskAlerts = true
 
   var body: some View {
-    NavigationStack {
-      ZStack {
-        Theme.auroraBackground
+    ScrollView(showsIndicators: false) {
+      VStack(alignment: .leading, spacing: 24) {
+        // Main Toggle
+        VStack(spacing: 0) {
+          HStack(spacing: 12) {
+            Image(systemName: "bell.fill")
+              .font(.system(size: 20, weight: .medium))
+              .foregroundStyle(.red)
+              .frame(width: 24)
 
-        List {
-          Section {
-            Toggle("Enable Notifications", isOn: $notificationsEnabled)
+            Text("Enable Notifications")
+              .font(.system(size: 16, weight: .medium))
+              .foregroundStyle(.primary)
+
+            Spacer()
+
+            Toggle("", isOn: $notificationsEnabled)
+              .tint(Theme.secondary)
           }
-
-          Section {
-            Toggle("Daily Reminders", isOn: $dailyReminders)
-              .disabled(!notificationsEnabled)
-
-            Toggle("Task Alerts", isOn: $taskAlerts)
-              .disabled(!notificationsEnabled)
-          } header: {
-            Text("Notification Types")
-          }
+          .padding(.horizontal, 20)
+          .padding(.vertical, 14)
         }
-        .scrollContentBackground(.hidden)
-      }
-      .navigationTitle("Notifications")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("Done") {
-            isPresented = false
+        .glassEffect(.regular)
+
+        // Notification Types
+        VStack(alignment: .leading, spacing: 10) {
+          Text("NOTIFICATION TYPES")
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .padding(.leading, 8)
+
+          VStack(spacing: 0) {
+            HStack {
+              Image(systemName: "clock.fill")
+                .font(.system(size: 18))
+                .foregroundStyle(Theme.secondary)
+                .frame(width: 24)
+
+              Text("Daily Reminders")
+                .font(.system(size: 16))
+                .foregroundStyle(notificationsEnabled ? .primary : .secondary)
+
+              Spacer()
+
+              Toggle("", isOn: $dailyReminders)
+                .tint(Theme.secondary)
+                .disabled(!notificationsEnabled)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+
+            Divider()
+              .padding(.leading, 56)
+
+            HStack {
+              Image(systemName: "checklist")
+                .font(.system(size: 18))
+                .foregroundStyle(Theme.secondary)
+                .frame(width: 24)
+
+              Text("Task Alerts")
+                .font(.system(size: 16))
+                .foregroundStyle(notificationsEnabled ? .primary : .secondary)
+
+              Spacer()
+
+              Toggle("", isOn: $taskAlerts)
+                .tint(Theme.secondary)
+                .disabled(!notificationsEnabled)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
           }
-          .foregroundStyle(Theme.secondary)
+          .glassEffect(.regular)
         }
       }
+      .padding(.horizontal, 16)
+      .padding(.top, 20)
+      .padding(.bottom, 100)
     }
+    .background(Color.clear.auroraBackground())
+    .navigationTitle("Notifications")
+    .toolbarTitleDisplayMode(.inlineLarge)
+    .safeAreaPadding(.top, 8)
+    .toolbar(.hidden, for: .tabBar)
   }
 }
 

@@ -17,7 +17,6 @@ struct HomeView: View {
   @State private var agendaExpanded = true
   @State private var isSearching = false
   @Namespace private var namespace
-  @State private var showingSettings = false
   @State private var showingNewTask = false
   @State private var showingPinnedCards = false
   @State private var navigationPath = NavigationPath()
@@ -162,8 +161,8 @@ struct HomeView: View {
         ToolbarSpacer(.fixed, placement: .topBarTrailing)
 
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Settings", systemImage: "gearshape") {
-            showingSettings = true
+          NavigationLink(value: "settings") {
+            Image(systemName: "gearshape")
           }
         }
       }
@@ -173,8 +172,10 @@ struct HomeView: View {
           taskStore.addTaskTrigger = .none
         }
       }
-      .sheet(isPresented: $showingSettings) {
-        SettingsView()
+      .navigationDestination(for: String.self) { destination in
+        if destination == "settings" {
+          SettingsView()
+        }
       }
       .sheet(isPresented: $showingNewTask) {
         TaskSheet()

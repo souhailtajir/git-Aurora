@@ -53,6 +53,7 @@ struct EntryEditorView: View {
           Image(systemName: "checkmark")
             .font(.system(size: 16, weight: .bold))
         }
+        .buttonStyle(.glassProminent)
         .tint(Theme.primary)
       }
     }

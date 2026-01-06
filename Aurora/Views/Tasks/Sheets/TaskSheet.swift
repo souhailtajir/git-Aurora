@@ -130,11 +130,9 @@ struct TaskSheet: View {
             dismiss()
           } label: {
             Image(systemName: "xmark")
-              .font(.system(size: 12, weight: .bold))
-              .foregroundStyle(.secondary)
+              .font(.system(size: 15, weight: .bold))
+              .foregroundStyle(Theme.primary)
               .frame(width: 30, height: 30)
-              .background(Color(.tertiarySystemFill))
-              .clipShape(Circle())
           }
         }
 
@@ -143,13 +141,12 @@ struct TaskSheet: View {
             saveTask()
           } label: {
             Image(systemName: "checkmark")
-              .font(.system(size: 12, weight: .bold))
+              .font(.system(size: 15, weight: .bold))
               .foregroundStyle(.white)
               .frame(width: 30, height: 30)
-              .background(title.isEmpty ? Color.gray : Color.blue)
-              .clipShape(Circle())
           }
-          .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
+          .buttonStyle(.glassProminent)
+          .tint(Theme.primary)
         }
       }
       .onAppear {
@@ -359,7 +356,7 @@ struct TaskSheet: View {
             }
 
             Text("List")
-              .foregroundStyle(.primary)
+              .foregroundStyle(.white)
 
             Spacer()
 
@@ -368,7 +365,7 @@ struct TaskSheet: View {
 
             Image(systemName: "chevron.right")
               .font(.system(size: 14, weight: .semibold))
-              .foregroundStyle(.tertiary)
+              .foregroundStyle(.secondary)
           }
           .padding(.horizontal, 16)
           .padding(.vertical, 12)
@@ -456,7 +453,7 @@ struct TaskSheet: View {
             if hasDate {
               Text(formatDateLabel(selectedDate))
                 .font(.caption)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Theme.primary)
             }
           }
 
@@ -478,7 +475,7 @@ struct TaskSheet: View {
               }
             )
           )
-          .tint(.green)
+          .tint(Theme.primary)
         }
       }
       .buttonStyle(.plain)
@@ -521,7 +518,7 @@ struct TaskSheet: View {
             if hasTime {
               Text(selectedTime.formatted(date: .omitted, time: .shortened))
                 .font(.caption)
-                .foregroundStyle(.blue)
+                .foregroundStyle(Theme.secondary)
             }
           }
 
@@ -543,7 +540,7 @@ struct TaskSheet: View {
               }
             )
           )
-          .tint(.green)
+          .tint(Theme.primary)
         }
       }
       .buttonStyle(.plain)
@@ -590,7 +587,7 @@ struct TaskSheet: View {
           }
         )
       )
-      .tint(.green)
+      .tint(Theme.primary)
     }
     .padding(.horizontal, 16)
     .padding(.vertical, 10)
@@ -616,6 +613,7 @@ struct TaskSheet: View {
       .padding(.vertical, 14)
     }
     .background(Color(.secondarySystemGroupedBackground))
+    .glassEffect(.regular.tint(.red))
     .clipShape(RoundedRectangle(cornerRadius: 12))
     .padding(.horizontal, 16)
     .padding(.top, 24)

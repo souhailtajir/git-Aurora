@@ -15,20 +15,32 @@ struct ContentView: View {
   var body: some View {
     ZStack(alignment: .top) {
       TabView(selection: $selectedTab) {
-        Tab("Home", systemImage: "house.fill", value: 0) {
+        Tab(value: 0) {
           HomeView()
+        } label: {
+          Label("Home", systemImage: "house.fill")
+            .symbolEffect(.bounce, value: selectedTab == 0)
         }
 
-        Tab("Tasks", systemImage: "list.bullet", value: 1) {
+        Tab(value: 1) {
           TasksView()
+        } label: {
+          Label("Tasks", systemImage: "list.bullet")
+            .symbolEffect(.bounce, value: selectedTab == 1)
         }
 
-        Tab("Journal", systemImage: "book.fill", value: 2) {
+        Tab(value: 2) {
           JournalView()
+        } label: {
+          Label("Journal", systemImage: "book.fill")
+            .symbolEffect(.bounce, value: selectedTab == 2)
         }
 
-        Tab("Calendar", systemImage: "calendar", value: 3) {
+        Tab(value: 3) {
           CalendarView()
+        } label: {
+          Label("Calendar", systemImage: "calendar")
+            .symbolEffect(.bounce, value: selectedTab == 3)
         }
 
         // Dynamic Action Tab
