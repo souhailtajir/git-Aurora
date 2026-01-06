@@ -31,6 +31,10 @@ struct JournalEntryRow: View {
         Text(timeText)
           .font(.system(size: 14))
           .foregroundStyle(.secondary)
+
+        Image(systemName: "chevron.right")
+          .font(.system(size: 12, weight: .semibold))
+          .foregroundStyle(.tertiary)
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 14)
@@ -43,7 +47,7 @@ struct JournalEntryRow: View {
           taskStore.deleteJournalEntry(entry)
         }
       } label: {
-        Label("Delete", systemImage: "trash")
+        Label("", systemImage: "trash")
       }
     }
   }

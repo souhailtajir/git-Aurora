@@ -17,6 +17,7 @@ struct JournalView: View {
   @State private var isLocked = false
   @State private var showNewEntryFullScreen = false
   @State private var newEntryId: UUID?
+  @State private var recentsExpanded = true
 
   var body: some View {
     NavigationStack(path: $navigationPath) {
@@ -140,17 +141,117 @@ struct JournalView: View {
   // MARK: - Main Scroll View
 
   private var mainScrollView: some View {
-    ScrollView {
-      VStack(spacing: 16) {
-        if !searchText.isEmpty {
-          searchResults
-        } else {
-          mainContent
+    List {
+      if !searchText.isEmpty {
+        searchResultsContent
+      } else {
+        mainContentRows
+      }
+    }
+    .listStyle(.plain)
+    .scrollContentBackground(.hidden)
+    .scrollIndicators(.hidden)
+  }
+
+  // MARK: - Main Content Rows (for List)
+
+  @ViewBuilder
+  private var mainContentRows: some View {
+    // Insight card
+    JournalInsightCard(
+      totalEntries: taskStore.journalEntries.count,
+      entriesThisMonth: entriesThisMonth
+    )
+    .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+    .listRowBackground(Color.clear)
+    .listRowSeparator(.hidden)
+
+    // Streak card
+    JournalStreakCard(streak: streak)
+      .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+      .listRowBackground(Color.clear)
+      .listRowSeparator(.hidden)
+
+    // Navigation rows
+    NavigationRow(
+      icon: "books.vertical.fill",
+      color: Theme.tint,
+      title: "All Entries",
+      count: taskStore.journalEntries.count
+    ) {
+      navigationPath.append(JournalNav.allEntries)
+    }
+    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+    .listRowBackground(Color.clear)
+    .listRowSeparator(.hidden)
+
+    NavigationRow(
+      icon: "trash",
+      color: .gray,
+      title: "Recently Deleted",
+      count: taskStore.deletedJournalEntries.count
+    ) {
+      navigationPath.append(JournalNav.deleted)
+    }
+    .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+    .listRowBackground(Color.clear)
+    .listRowSeparator(.hidden)
+
+    // Recent entries section header
+    recentEntriesHeader
+      .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
+      .listRowBackground(Color.clear)
+      .listRowSeparator(.hidden)
+
+    // Recent entries content
+    if recentsExpanded {
+      if recentEntries.isEmpty {
+        emptyState
+          .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
+      } else {
+        ForEach(recentEntries) { entry in
+          JournalEntryRow(entry: entry) {
+            navigationPath.append(entry)
+          }
+          .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+          .listRowBackground(Color.clear)
+          .listRowSeparator(.hidden)
         }
       }
-      .padding(.horizontal, 16)
     }
-    .scrollIndicators(.hidden)
+  }
+
+  // MARK: - Search Results Content (for List)
+
+  @ViewBuilder
+  private var searchResultsContent: some View {
+    let results = filteredEntries
+    if results.isEmpty {
+      VStack(spacing: 12) {
+        Image(systemName: "magnifyingglass")
+          .font(.system(size: 36))
+          .foregroundStyle(.secondary)
+        Text("No results")
+          .font(.system(size: 15))
+          .foregroundStyle(.secondary)
+      }
+      .frame(maxWidth: .infinity)
+      .padding(.vertical, 60)
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
+      .listRowSeparator(.hidden)
+    } else {
+      ForEach(results) { entry in
+        JournalEntryRow(entry: entry) {
+          navigationPath.append(entry)
+        }
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+      }
+    }
   }
 
   // MARK: - Main Content
@@ -202,19 +303,39 @@ struct JournalView: View {
 
   private var recentEntriesSection: some View {
     VStack(alignment: .leading, spacing: 12) {
-      Text("Recent")
-        .font(.system(size: 22, weight: .bold))
-        .foregroundStyle(.primary)
-        .padding(.horizontal, 4)
+      Button {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+          recentsExpanded.toggle()
+        }
+      } label: {
+        HStack {
+          Text("Recent")
+            .font(.system(size: 22, weight: .bold))
+            .foregroundStyle(.primary)
 
-      if recentEntries.isEmpty {
-        emptyState
-      } else {
-        // Use List for swipe-to-delete
-        ForEach(recentEntries) { entry in
-          JournalEntryRow(entry: entry) {
-            navigationPath.append(entry)
+          Image(systemName: recentsExpanded ? "chevron.down" : "chevron.right")
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(.secondary)
+            .contentTransition(.symbolEffect(.replace))
+
+          Spacer()
+        }
+        .padding(.horizontal, 4)
+      }
+      .buttonStyle(.plain)
+
+      if recentsExpanded {
+        if recentEntries.isEmpty {
+          emptyState
+        } else {
+          VStack(spacing: 8) {
+            ForEach(recentEntries) { entry in
+              JournalEntryRow(entry: entry) {
+                navigationPath.append(entry)
+              }
+            }
           }
+          .transition(.opacity.combined(with: .move(edge: .top)))
         }
       }
     }
@@ -236,6 +357,29 @@ struct JournalView: View {
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, 32)
+  }
+
+  private var recentEntriesHeader: some View {
+    Button {
+      withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+        recentsExpanded.toggle()
+      }
+    } label: {
+      HStack {
+        Text("Recent")
+          .font(.system(size: 22, weight: .bold))
+          .foregroundStyle(.primary)
+
+        Image(systemName: recentsExpanded ? "chevron.down" : "chevron.right")
+          .font(.system(size: 14, weight: .semibold))
+          .foregroundStyle(.secondary)
+          .contentTransition(.symbolEffect(.replace))
+
+        Spacer()
+      }
+      .padding(.horizontal, 4)
+    }
+    .buttonStyle(.plain)
   }
 
   // MARK: - Search Results

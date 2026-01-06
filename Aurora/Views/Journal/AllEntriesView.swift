@@ -9,6 +9,7 @@ struct AllEntriesView: View {
   @Environment(TaskStore.self) var taskStore
   @Environment(\.dismiss) var dismiss
   @State private var searchText = ""
+  @State private var isSearching = false
   @State private var selectedEntry: JournalEntry?
 
   private var entries: [JournalEntry] {
@@ -36,109 +37,85 @@ struct AllEntriesView: View {
   }
 
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 16) {
-        // Header
-        VStack(alignment: .leading, spacing: 4) {
-          Text("All Entries")
-            .font(.system(size: 28, weight: .bold))
-          Text("\(taskStore.journalEntries.count) entries")
-            .font(.system(size: 14))
+    List {
+      // Header
+      VStack(alignment: .leading, spacing: 4) {
+        Text("All Entries")
+          .font(.system(size: 28, weight: .bold))
+        Text("\(taskStore.journalEntries.count) entries")
+          .font(.system(size: 14))
+          .foregroundStyle(.secondary)
+      }
+      .listRowInsets(EdgeInsets(top: 16, leading: 16, bottom: 8, trailing: 16))
+      .listRowBackground(Color.clear)
+      .listRowSeparator(.hidden)
+
+      // Empty state or entries
+      if entries.isEmpty {
+        VStack(spacing: 12) {
+          Image(systemName: "book.closed")
+            .font(.system(size: 36))
+            .foregroundStyle(.secondary.opacity(0.5))
+          Text("No entries yet")
+            .font(.system(size: 15))
             .foregroundStyle(.secondary)
         }
-        .padding(.top, 16)
-
-        // Search
-        HStack(spacing: 10) {
-          Image(systemName: "magnifyingglass")
-            .foregroundStyle(.secondary)
-          TextField("Search", text: $searchText)
-            .textFieldStyle(.plain)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .glassEffect(.regular)
-        .clipShape(Capsule())
-
-        // Empty state or entries
-        if entries.isEmpty {
-          VStack(spacing: 12) {
-            Image(systemName: "book.closed")
-              .font(.system(size: 36))
-              .foregroundStyle(.secondary.opacity(0.5))
-            Text("No entries yet")
-              .font(.system(size: 15))
-              .foregroundStyle(.secondary)
-          }
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 60)
-        } else {
-          // Grouped entries
-          ForEach(grouped, id: \.0) { month, monthEntries in
-            VStack(alignment: .leading, spacing: 8) {
-              Text(month)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Theme.tint)
-                .padding(.horizontal, 4)
-
-              ForEach(monthEntries) { entry in
-                Button {
-                  selectedEntry = entry
-                } label: {
-                  entryRowContent(entry)
-                }
-                .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+      } else {
+        // Grouped entries
+        ForEach(grouped, id: \.0) { month, monthEntries in
+          Section {
+            ForEach(monthEntries) { entry in
+              JournalEntryRow(entry: entry) {
+                selectedEntry = entry
               }
+              .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+              .listRowBackground(Color.clear)
+              .listRowSeparator(.hidden)
             }
+          } header: {
+            Text(month)
+              .font(.system(size: 14, weight: .semibold))
+              .foregroundStyle(Theme.tint)
+              .textCase(nil)
           }
         }
       }
-      .padding(.horizontal, 16)
     }
+    .listStyle(.plain)
+    .scrollContentBackground(.hidden)
     .scrollIndicators(.hidden)
     .background(Color.clear.auroraBackground())
-    .navigationBarBackButtonHidden(true)
     .toolbar(.hidden, for: .tabBar)
     .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        Button {
-          dismiss()
-        } label: {
-          Image(systemName: "chevron.left")
-            .font(.system(size: 16, weight: .semibold))
-            .foregroundStyle(Theme.tint)
+      ToolbarItem(placement: .topBarTrailing) {
+        Button("Search", systemImage: "magnifyingglass") {
+          withAnimation {
+            isSearching = true
+          }
         }
       }
     }
+    .safeAreaInset(edge: .bottom) {
+      if isSearching {
+        BottomSearchBar(
+          text: $searchText,
+          isSearching: $isSearching,
+          placeholder: "Search entries..."
+        )
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+      }
+    }
+    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSearching)
     .navigationDestination(for: JournalEntry.self) { entry in
       EntryEditorView(entryId: entry.id)
     }
     .navigationDestination(item: $selectedEntry) { entry in
       EntryEditorView(entryId: entry.id)
     }
-  }
-
-  private func entryRowContent(_ entry: JournalEntry) -> some View {
-    HStack(spacing: 12) {
-      VStack(alignment: .leading, spacing: 4) {
-        Text(entry.title.isEmpty ? "Untitled" : entry.title)
-          .font(.system(size: 16, weight: .medium))
-          .foregroundStyle(.primary)
-          .lineLimit(1)
-
-        Text(entry.date.formatted(.dateTime.hour().minute()))
-          .font(.system(size: 13))
-          .foregroundStyle(.secondary)
-      }
-
-      Spacer()
-
-      Image(systemName: "chevron.right")
-        .font(.system(size: 12, weight: .semibold))
-        .foregroundStyle(.tertiary)
-    }
-    .padding(.horizontal, 16)
-    .padding(.vertical, 12)
-    .glassEffect(.regular)
   }
 }

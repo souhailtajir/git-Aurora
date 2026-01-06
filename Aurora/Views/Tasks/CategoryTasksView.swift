@@ -16,6 +16,7 @@ struct CategoryTasksView: View {
   @State private var editingTaskId: UUID? = nil
   @State private var selectedTaskForDetails: Task? = nil
   @State private var searchText = ""
+  @State private var isSearching = false
   @FocusState private var focusedTaskId: UUID?
 
   enum CategoryFilter: Hashable {
@@ -111,15 +112,34 @@ struct CategoryTasksView: View {
       .listStyle(.plain)
       .scrollContentBackground(.hidden)
       .scrollIndicators(.hidden)
-      .searchable(text: $searchText, prompt: "Search tasks...")
 
       // Color-coordinated floating add button
       addTaskButton
     }
+    .safeAreaInset(edge: .bottom) {
+      if isSearching {
+        BottomSearchBar(
+          text: $searchText,
+          isSearching: $isSearching,
+          placeholder: "Search tasks..."
+        )
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+      }
+    }
+    .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSearching)
     .navigationTitle(Text(filterType.title).foregroundColor(filterType.tintColor))
     .navigationBarTitleDisplayMode(.large)
     .toolbarColorScheme(.dark, for: .navigationBar)
     .toolbar(.hidden, for: .tabBar)
+    .toolbar {
+      ToolbarItem(placement: .topBarTrailing) {
+        Button("Search", systemImage: "magnifyingglass") {
+          withAnimation {
+            isSearching = true
+          }
+        }
+      }
+    }
     .tint(filterType.tintColor)
     .onTapGesture {
       // Dismiss keyboard when tapping outside
