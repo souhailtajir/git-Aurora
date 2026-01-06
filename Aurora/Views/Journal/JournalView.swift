@@ -15,6 +15,8 @@ struct JournalView: View {
   @State private var showingSettings = false
   @State private var navigationPath = NavigationPath()
   @State private var isLocked = false
+  @State private var showNewEntryFullScreen = false
+  @State private var newEntryId: UUID?
 
   var body: some View {
     NavigationStack(path: $navigationPath) {
@@ -68,8 +70,15 @@ struct JournalView: View {
 
       .onChange(of: taskStore.addJournalTrigger) { _, newValue in
         if newValue {
-          createNewEntry()
+          createNewEntryFullScreen()
           taskStore.addJournalTrigger = false
+        }
+      }
+      .fullScreenCover(isPresented: $showNewEntryFullScreen) {
+        if let entryId = newEntryId {
+          NavigationStack {
+            EntryEditorView(entryId: entryId)
+          }
         }
       }
       .navigationDestination(for: JournalNav.self) { nav in
@@ -303,6 +312,13 @@ struct JournalView: View {
     let entry = JournalEntry(title: "", body: "", date: Date())
     taskStore.addJournalEntry(entry)
     navigationPath.append(entry)
+  }
+
+  private func createNewEntryFullScreen() {
+    let entry = JournalEntry(title: "", body: "", date: Date())
+    taskStore.addJournalEntry(entry)
+    newEntryId = entry.id
+    showNewEntryFullScreen = true
   }
 
   private func unlockWithBiometrics() async {

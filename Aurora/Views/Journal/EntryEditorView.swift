@@ -23,7 +23,7 @@ struct EntryEditorView: View {
   }
 
   var body: some View {
-    Group {
+    ScrollView(showsIndicators: false) {
       if entry != nil {
         editorContent
       } else {
@@ -32,61 +32,27 @@ struct EntryEditorView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.clear.auroraBackground())
+    .navigationTitle(title.isEmpty ? "New Entry" : title)
+    .toolbarTitleDisplayMode(.inline)
     .navigationBarBackButtonHidden(true)
     .toolbar(.hidden, for: .tabBar)
     .toolbar {
-      ToolbarItemGroup(placement: .topBarLeading) {
+      ToolbarItem(placement: .topBarLeading) {
         Button {
           dismiss()
         } label: {
           Image(systemName: "chevron.left")
-            .font(.system(size: 18, weight: .semibold))
-            .foregroundStyle(.primary)
+            .font(.system(size: 16, weight: .semibold))
         }
-        .glassEffect(.regular)
       }
 
-      ToolbarItemGroup(placement: .principal) {
-        HStack(spacing: 24) {
-          Button {
-            // Text formatting
-          } label: {
-            Text("Aa")
-              .font(.system(size: 18, weight: .semibold))
-              .foregroundStyle(.primary)
-          }
-
-          Button {
-            // Style/theme
-          } label: {
-            Image(systemName: "circle")
-              .font(.system(size: 18, weight: .medium))
-              .foregroundStyle(.primary)
-          }
-
-          Button {
-            // More options
-          } label: {
-            Image(systemName: "ellipsis")
-              .font(.system(size: 18, weight: .medium))
-              .foregroundStyle(.primary)
-          }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .glassEffect(.regular)
-        .clipShape(Capsule())
-      }
-
-      ToolbarItemGroup(placement: .topBarTrailing) {
+      ToolbarItem(placement: .topBarTrailing) {
         Button {
           dismiss()
         } label: {
           Image(systemName: "checkmark")
-            .font(.system(size: 18, weight: .bold))
-            .foregroundStyle(.white)
+            .font(.system(size: 16, weight: .bold))
         }
-        .glassEffect(.regular.tint(Theme.primary).interactive())
       }
     }
     .safeAreaInset(edge: .bottom) {
