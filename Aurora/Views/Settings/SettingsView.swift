@@ -44,6 +44,35 @@ struct SettingsView: View {
           .glassEffect(.regular)
         }
 
+        // Calendar Settings
+        SettingsSection(title: "Calendar") {
+          VStack(spacing: 0) {
+            HStack(spacing: 12) {
+              Image(systemName: "calendar")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.blue)
+
+              Text("Week Starts on Monday")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.primary)
+
+              Spacer()
+
+              Toggle(
+                "",
+                isOn: Binding(
+                  get: { taskStore.weekStartsOnMonday },
+                  set: { taskStore.weekStartsOnMonday = $0 }
+                )
+              )
+              .tint(Theme.secondary)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+          }
+          .glassEffect(.regular)
+        }
+
         // App Settings
         SettingsSection(title: "App Settings") {
           VStack(spacing: 0) {

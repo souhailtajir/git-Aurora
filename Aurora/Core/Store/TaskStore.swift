@@ -33,6 +33,9 @@ final class TaskStore {
   var pinnedHomeCategoryIds: [UUID] = [] {
     didSet { scheduleSaveSettings() }
   }
+  var weekStartsOnMonday: Bool = true {
+    didSet { scheduleSaveSettings() }
+  }
   var myListsExpanded: Bool = true
 
   enum AddTaskTrigger {
@@ -60,7 +63,7 @@ final class TaskStore {
   func updateTask(_ task: Task) {
     if let index = tasks.firstIndex(where: { $0.id == task.id }) {
       tasks[index] = task
-        scheduleSaveTasks()
+      scheduleSaveTasks()
     }
   }
 
@@ -246,7 +249,8 @@ final class TaskStore {
       visibleCategories: Array(visibleCategories),
       smartListOrder: smartListOrder,
       pinnedHomeSmartLists: Array(pinnedHomeSmartLists),
-      pinnedHomeCategoryIds: Array(pinnedHomeCategoryIds)
+      pinnedHomeCategoryIds: Array(pinnedHomeCategoryIds),
+      weekStartsOnMonday: weekStartsOnMonday
     )
     let url = getDocumentsDirectory().appendingPathComponent("settings.json")
     do {
@@ -324,12 +328,14 @@ final class TaskStore {
       smartListOrder = settings.smartListOrder
       pinnedHomeSmartLists = settings.pinnedHomeSmartLists
       pinnedHomeCategoryIds = settings.pinnedHomeCategoryIds
+      weekStartsOnMonday = settings.weekStartsOnMonday
     } catch {
       // Use defaults
       visibleSmartLists = [.today, .all, .flagged]
       smartListOrder = []
       pinnedHomeSmartLists = [.flagged]
       pinnedHomeCategoryIds = []
+      weekStartsOnMonday = true
     }
   }
 
