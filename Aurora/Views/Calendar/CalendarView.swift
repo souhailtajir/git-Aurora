@@ -192,7 +192,7 @@ struct CalendarView: View {
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(Theme.primary)
             .frame(width: 36, height: 36)
-            .glassEffect(.regular)
+            .glassEffect(.clear)
         }
 
         Spacer()
@@ -202,7 +202,7 @@ struct CalendarView: View {
           .foregroundStyle(.primary)
           .padding(.horizontal, 20)
           .padding(.vertical, 10)
-          .glassEffect(.regular)
+          .glassEffect(.clear)
 
         Spacer()
 
@@ -216,7 +216,7 @@ struct CalendarView: View {
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(Theme.primary)
             .frame(width: 36, height: 36)
-            .glassEffect(.regular)
+            .glassEffect(.clear)
         }
       }
       .padding(.horizontal, 8)
