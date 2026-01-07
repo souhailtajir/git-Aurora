@@ -76,6 +76,11 @@ final class TaskStore {
     }
   }
 
+  func clearCompletedTasks() {
+    tasks.removeAll { $0.isCompleted }
+    scheduleSaveTasks()
+  }
+
   // MARK: - Category Management
   func addCategory(_ category: TaskCategory) {
     categories.append(category)

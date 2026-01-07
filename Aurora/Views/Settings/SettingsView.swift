@@ -9,11 +9,19 @@ import SwiftUI
 
 struct SettingsView: View {
   @Environment(UserProfileStore.self) private var userProfileStore
+  @Environment(TaskStore.self) private var taskStore
   @State private var showingBirthDatePicker = false
+  @State private var showingResetAlert = false
+  @State private var hapticFeedback = true
+  @State private var completionSounds = true
+
+  private var totalCompleted: Int {
+    taskStore.tasks.filter { $0.isCompleted }.count
+  }
 
   var body: some View {
     ScrollView(showsIndicators: false) {
-      VStack(spacing: 24) {
+      VStack(spacing: 20) {
         // Hero Profile Section
         HeroProfileView(
           profile: userProfileStore.profile,
@@ -64,6 +72,52 @@ struct SettingsView: View {
           .glassEffect(.regular)
         }
 
+        // Sounds & Haptics
+        SettingsSection(title: "Sounds & Haptics") {
+          VStack(spacing: 0) {
+            ToggleRow(
+              icon: "speaker.wave.2.fill",
+              iconColor: .pink,
+              title: "Completion Sounds",
+              isOn: $completionSounds
+            )
+
+            CustomDivider()
+
+            ToggleRow(
+              icon: "iphone.radiowaves.left.and.right",
+              iconColor: .orange,
+              title: "Haptic Feedback",
+              isOn: $hapticFeedback
+            )
+          }
+          .glassEffect(.regular)
+        }
+
+        // Data & Storage
+        SettingsSection(title: "Data & Storage") {
+          VStack(spacing: 0) {
+            SettingsRow(
+              icon: "icloud.fill",
+              iconColor: .cyan,
+              title: "iCloud Sync",
+              value: "On",
+              showChevron: false
+            )
+
+            CustomDivider()
+
+            SettingsRow(
+              icon: "externaldrive.fill",
+              iconColor: .indigo,
+              title: "Storage Used",
+              value: "\(taskStore.tasks.count) items",
+              showChevron: false
+            )
+          }
+          .glassEffect(.regular)
+        }
+
         // About
         SettingsSection(title: "About") {
           VStack(spacing: 0) {
@@ -90,6 +144,54 @@ struct SettingsView: View {
               )
             }
             .buttonStyle(.plain)
+
+            CustomDivider()
+
+            Button {
+              if let url = URL(string: "https://example.com/terms") {
+                UIApplication.shared.open(url)
+              }
+            } label: {
+              SettingsRow(
+                icon: "doc.text.fill",
+                iconColor: .mint,
+                title: "Terms of Service",
+                value: ""
+              )
+            }
+            .buttonStyle(.plain)
+          }
+          .glassEffect(.regular)
+        }
+
+        // Danger Zone
+        SettingsSection(title: "Danger Zone") {
+          VStack(spacing: 0) {
+            Button {
+              taskStore.clearCompletedTasks()
+            } label: {
+              SettingsRow(
+                icon: "trash.fill",
+                iconColor: .red,
+                title: "Clear Completed Tasks",
+                value: "\(totalCompleted)"
+              )
+            }
+            .buttonStyle(.plain)
+
+            CustomDivider()
+
+            Button {
+              showingResetAlert = true
+            } label: {
+              SettingsRow(
+                icon: "arrow.counterclockwise",
+                iconColor: .red,
+                title: "Reset All Settings",
+                value: ""
+              )
+            }
+            .buttonStyle(.plain)
           }
           .glassEffect(.regular)
         }
@@ -107,6 +209,16 @@ struct SettingsView: View {
       BirthDatePickerView(
         userProfileStore: userProfileStore, isPresented: $showingBirthDatePicker)
     }
+    .alert("Reset All Settings?", isPresented: $showingResetAlert) {
+      Button("Cancel", role: .cancel) {}
+      Button("Reset", role: .destructive) {
+        // Reset settings to defaults
+        hapticFeedback = true
+        completionSounds = true
+      }
+    } message: {
+      Text("This will reset all settings to their default values. Your tasks will not be affected.")
+    }
     .navigationDestination(for: SettingsDestination.self) { destination in
       switch destination {
       case .appearance:
@@ -115,6 +227,34 @@ struct SettingsView: View {
         NotificationSettingsView()
       }
     }
+  }
+}
+
+// MARK: - Toggle Row Component
+
+struct ToggleRow: View {
+  let icon: String
+  let iconColor: Color
+  let title: String
+  @Binding var isOn: Bool
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Image(systemName: icon)
+        .font(.system(size: 18, weight: .semibold))
+        .foregroundStyle(iconColor)
+
+      Text(title)
+        .font(.system(size: 16, weight: .medium))
+        .foregroundStyle(.primary)
+
+      Spacer()
+
+      Toggle("", isOn: $isOn)
+        .tint(Theme.secondary)
+    }
+    .padding(.horizontal, 20)
+    .padding(.vertical, 14)
   }
 }
 
@@ -230,9 +370,8 @@ struct SettingsRow: View {
   var body: some View {
     HStack(spacing: 12) {
       Image(systemName: icon)
-        .font(.system(size: 20, weight: .medium))
+        .font(.system(size: 18, weight: .semibold))
         .foregroundStyle(iconColor)
-        .frame(width: 24)
 
       Text(title)
         .font(.system(size: 16, weight: .medium))
@@ -242,7 +381,7 @@ struct SettingsRow: View {
 
       if !value.isEmpty {
         Text(value)
-          .font(.system(size: 16))
+          .font(.system(size: 16, weight: .medium))
           .foregroundStyle(.secondary)
       }
 
@@ -267,9 +406,8 @@ struct PickerRow: View {
   var body: some View {
     HStack(spacing: 12) {
       Image(systemName: icon)
-        .font(.system(size: 20, weight: .medium))
+        .font(.system(size: 18, weight: .semibold))
         .foregroundStyle(iconColor)
-        .frame(width: 24)
 
       Text(title)
         .font(.system(size: 16, weight: .medium))
@@ -292,7 +430,7 @@ struct PickerRow: View {
 struct CustomDivider: View {
   var body: some View {
     Divider()
-      .padding(.leading, 56)
+      .padding(.leading, 50)
   }
 }
 
@@ -314,14 +452,13 @@ struct AppearanceSettingsView: View {
             Button {
               selectedAppearance = option
             } label: {
-              HStack {
+              HStack(spacing: 12) {
                 Image(systemName: iconForAppearance(option))
-                  .font(.system(size: 18))
+                  .font(.system(size: 18, weight: .semibold))
                   .foregroundStyle(Theme.secondary)
-                  .frame(width: 24)
 
                 Text(option)
-                  .font(.system(size: 16))
+                  .font(.system(size: 16, weight: .medium))
                   .foregroundStyle(.primary)
 
                 Spacer()
@@ -340,7 +477,7 @@ struct AppearanceSettingsView: View {
 
             if option != "System" {
               Divider()
-                .padding(.leading, 56)
+                .padding(.leading, 50)
             }
           }
         }
@@ -380,9 +517,8 @@ struct NotificationSettingsView: View {
         VStack(spacing: 0) {
           HStack(spacing: 12) {
             Image(systemName: "bell.fill")
-              .font(.system(size: 20, weight: .medium))
+              .font(.system(size: 18, weight: .semibold))
               .foregroundStyle(.red)
-              .frame(width: 24)
 
             Text("Enable Notifications")
               .font(.system(size: 16, weight: .medium))
@@ -406,14 +542,13 @@ struct NotificationSettingsView: View {
             .padding(.leading, 8)
 
           VStack(spacing: 0) {
-            HStack {
+            HStack(spacing: 12) {
               Image(systemName: "clock.fill")
-                .font(.system(size: 18))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Theme.secondary)
-                .frame(width: 24)
 
               Text("Daily Reminders")
-                .font(.system(size: 16))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(notificationsEnabled ? .primary : .secondary)
 
               Spacer()
@@ -426,16 +561,15 @@ struct NotificationSettingsView: View {
             .padding(.vertical, 14)
 
             Divider()
-              .padding(.leading, 56)
+              .padding(.leading, 50)
 
-            HStack {
+            HStack(spacing: 12) {
               Image(systemName: "checklist")
-                .font(.system(size: 18))
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Theme.secondary)
-                .frame(width: 24)
 
               Text("Task Alerts")
-                .font(.system(size: 16))
+                .font(.system(size: 16, weight: .medium))
                 .foregroundStyle(notificationsEnabled ? .primary : .secondary)
 
               Spacer()
