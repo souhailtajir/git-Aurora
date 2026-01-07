@@ -21,16 +21,32 @@ struct CalendarView: View {
   @Namespace private var namespace
 
   private let calendar = Calendar.current
-  private let weekdays = ["S", "M", "T", "W", "T", "F", "S"]
 
   // MARK: - Computed Properties
+
+  private var weekdays: [String] {
+    taskStore.weekStartsOnMonday
+      ? ["M", "T", "W", "T", "F", "S", "S"]
+      : ["S", "M", "T", "W", "T", "F", "S"]
+  }
 
   private var currentMonthDates: [Date?] {
     let interval = calendar.dateInterval(of: .month, for: selectedDate)!
     let firstDay = interval.start
     let firstWeekday = calendar.component(.weekday, from: firstDay)
 
-    var dates: [Date?] = Array(repeating: nil, count: firstWeekday - 1)
+    // Calculate offset based on week start preference
+    // weekday: 1 = Sunday, 2 = Monday, ..., 7 = Saturday
+    let offset: Int
+    if taskStore.weekStartsOnMonday {
+      // Monday start: Monday=0, Tuesday=1, ..., Sunday=6
+      offset = (firstWeekday + 5) % 7
+    } else {
+      // Sunday start: Sunday=0, Monday=1, ..., Saturday=6
+      offset = firstWeekday - 1
+    }
+
+    var dates: [Date?] = Array(repeating: nil, count: offset)
 
     var current = firstDay
     while current < interval.end {
@@ -221,6 +237,8 @@ struct CalendarView: View {
       }
     }
     .padding(16)
+    .frame(width: 360)
+    .containerShape(RoundedRectangle(cornerRadius: 6))
     .glassEffect(.regular)
   }
 
