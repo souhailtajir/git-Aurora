@@ -180,7 +180,7 @@ struct CalendarView: View {
 
   private var monthCalendarCard: some View {
     VStack(spacing: 16) {
-      // Month header with navigation
+      // Month header with navigation (glass effect)
       HStack {
         Button {
           withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
@@ -191,6 +191,8 @@ struct CalendarView: View {
           Image(systemName: "chevron.left")
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(Theme.primary)
+            .frame(width: 36, height: 36)
+            .glassEffect(.clear)
         }
 
         Spacer()
@@ -198,6 +200,9 @@ struct CalendarView: View {
         Text(monthYearString)
           .font(.system(size: 18, weight: .bold))
           .foregroundStyle(.primary)
+          .padding(.horizontal, 20)
+          .padding(.vertical, 10)
+          .glassEffect(.clear)
 
         Spacer()
 
@@ -210,6 +215,8 @@ struct CalendarView: View {
           Image(systemName: "chevron.right")
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(Theme.primary)
+            .frame(width: 36, height: 36)
+            .glassEffect(.clear)
         }
       }
       .padding(.horizontal, 8)
@@ -231,15 +238,12 @@ struct CalendarView: View {
             dayCell(for: date)
           } else {
             Color.clear
-              .frame(height: 36)
+              .frame(height: 44)
           }
         }
       }
     }
-    .padding(16)
-    .frame(width: 360)
-    .containerShape(RoundedRectangle(cornerRadius: 6))
-    .glassEffect(.regular)
+    .padding(.horizontal, 16)
   }
 
   private func dayCell(for date: Date) -> some View {
@@ -268,19 +272,17 @@ struct CalendarView: View {
             .frame(width: 5, height: 5)
         }
       }
-      .frame(width: 36, height: 36)
-      .background(
-        Group {
-          if isSelected {
-            Circle()
-              .fill(Theme.primary)
-              .matchedGeometryEffect(id: "selectedDay", in: namespace)
-          } else if isToday {
-            Circle()
-              .strokeBorder(Theme.primary, lineWidth: 2)
-          }
+      .frame(width: 44, height: 44)
+      .background {
+        if isSelected {
+          Circle()
+            .glassEffect(.clear.tint(Theme.primary))
+            .matchedGeometryEffect(id: "selectedDay", in: namespace)
+        } else if isToday {
+          Circle()
+            .strokeBorder(Theme.primary, lineWidth: 2)
         }
-      )
+      }
     }
     .buttonStyle(.plain)
   }
@@ -348,12 +350,6 @@ struct CalendarView: View {
             .contentTransition(.symbolEffect(.replace))
 
           Spacer()
-
-          if !tasksForSelectedDay.isEmpty {
-            Text("\(tasksForSelectedDay.count)")
-              .font(.system(size: 14, weight: .semibold))
-              .foregroundStyle(.secondary)
-          }
         }
         .padding(.horizontal, 4)
       }

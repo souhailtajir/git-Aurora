@@ -16,6 +16,9 @@ struct JournalEntry: Identifiable, Codable, Hashable, Sendable {
   var theme: JournalTheme = .system
   var images: [Data] = []
   var deletedAt: Date? = nil
+  var locationName: String? = nil
+  var latitude: Double? = nil
+  var longitude: Double? = nil
 }
 
 enum JournalTheme: String, Codable, CaseIterable, Sendable {
