@@ -3,6 +3,8 @@
 //  Aurora
 //
 
+import AVFoundation
+import CoreLocation
 import PhotosUI
 import SwiftUI
 
@@ -17,6 +19,14 @@ struct EntryEditorView: View {
   @State private var selectedPhoto: PhotosPickerItem?
   @FocusState private var titleFocused: Bool
   @FocusState private var bodyFocused: Bool
+
+  // Toolbar state
+  @State private var showCamera = false
+  @State private var showSuggestions = false
+  @State private var showVoiceAlert = false
+  @State private var showMagicAlert = false
+  @State private var locationService = LocationService()
+  @State private var isLoadingLocation = false
 
   private var entry: JournalEntry? {
     taskStore.journalEntries.first { $0.id == entryId }
@@ -63,20 +73,52 @@ struct EntryEditorView: View {
     .onAppear {
       loadEntry()
     }
+    .fullScreenCover(isPresented: $showCamera) {
+      CameraPicker { imageData in
+        addImageToEntry(imageData)
+      }
+      .ignoresSafeArea()
+    }
+    .sheet(isPresented: $showSuggestions) {
+      JournalSuggestionsSheet { prompt in
+        if entryBody.isEmpty {
+          entryBody = prompt
+        } else {
+          entryBody += "\n\n" + prompt
+        }
+        save()
+      }
+    }
+    .alert("Voice Recording", isPresented: $showVoiceAlert) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(
+        "Voice recording feature coming soon! This will allow you to add audio notes to your journal entries."
+      )
+    }
+    .alert("Writing Tools", isPresented: $showMagicAlert) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(
+        "AI writing assistance feature coming soon! This will help enhance and polish your journal entries."
+      )
+    }
   }
 
   // MARK: - Bottom Toolbar
 
   private var bottomToolbar: some View {
     HStack(spacing: 28) {
+      // Journaling suggestions
       Button {
-        // AI writing suggestions
+        showSuggestions = true
       } label: {
         Image(systemName: "sparkles")
           .font(.system(size: 22))
           .foregroundStyle(Theme.tint)
       }
 
+      // Photo library picker
       PhotosPicker(selection: $selectedPhoto, matching: .images) {
         Image(systemName: "photo.on.rectangle")
           .font(.system(size: 22))
@@ -88,32 +130,41 @@ struct EntryEditorView: View {
         }
       }
 
+      // Camera
       Button {
-        // Camera
+        requestCameraAccess()
       } label: {
         Image(systemName: "camera")
           .font(.system(size: 22))
           .foregroundStyle(Theme.tint)
       }
 
+      // Voice recording
       Button {
-        // Voice recording
+        showVoiceAlert = true
       } label: {
         Image(systemName: "waveform")
           .font(.system(size: 22))
           .foregroundStyle(Theme.tint)
       }
 
+      // Location - toggle on/off
       Button {
-        // Location
+        toggleLocation()
       } label: {
-        Image(systemName: "location")
-          .font(.system(size: 22))
-          .foregroundStyle(Theme.tint)
+        if isLoadingLocation {
+          ProgressView()
+            .tint(Theme.tint)
+        } else {
+          Image(systemName: entry?.locationName != nil ? "location.fill" : "location")
+            .font(.system(size: 22))
+            .foregroundStyle(entry?.locationName != nil ? Theme.primary : Theme.tint)
+        }
       }
 
+      // Magic wand / writing tools
       Button {
-        // More attachments
+        showMagicAlert = true
       } label: {
         Image(systemName: "wand.and.stars")
           .font(.system(size: 22))
@@ -122,8 +173,10 @@ struct EntryEditorView: View {
     }
     .padding(.horizontal, 20)
     .padding(.vertical, 10)
-    .glassEffect(.regular)
-    .clipShape(Capsule())
+    .background {
+      Capsule()
+        .glassEffect(.clear.interactive())
+    }
     .padding(.horizontal, 24)
     .padding(.bottom, 8)
   }
@@ -144,6 +197,23 @@ struct EntryEditorView: View {
 
         Divider()
           .background(.secondary.opacity(0.3))
+
+        // Location badge
+        if let locationName = entry?.locationName {
+          HStack(spacing: 6) {
+            Image(systemName: "location.fill")
+              .font(.system(size: 12))
+            Text(locationName)
+              .font(.system(size: 13))
+          }
+          .foregroundStyle(Theme.primary)
+          .padding(.horizontal, 10)
+          .padding(.vertical, 6)
+          .background {
+            Capsule()
+              .fill(Theme.primary.opacity(0.15))
+          }
+        }
 
         // Body editor
         ZStack(alignment: .topLeading) {
@@ -241,17 +311,73 @@ struct EntryEditorView: View {
   private func loadPhoto(_ item: PhotosPickerItem) {
     AsyncTask {
       if let data = try? await item.loadTransferable(type: Data.self) {
-        guard var entry = entry else { return }
-        entry.images.append(data)
-        taskStore.updateJournalEntry(entry)
+        addImageToEntry(data)
         selectedPhoto = nil
       }
     }
+  }
+
+  private func addImageToEntry(_ data: Data) {
+    guard var entry = entry else { return }
+    entry.images.append(data)
+    taskStore.updateJournalEntry(entry)
   }
 
   private func removeImage(at index: Int) {
     guard var entry = entry else { return }
     entry.images.remove(at: index)
     taskStore.updateJournalEntry(entry)
+  }
+
+  private func requestCameraAccess() {
+    switch AVCaptureDevice.authorizationStatus(for: .video) {
+    case .authorized:
+      showCamera = true
+    case .notDetermined:
+      AVCaptureDevice.requestAccess(for: .video) { granted in
+        if granted {
+          AsyncTask { @MainActor in
+            showCamera = true
+          }
+        }
+      }
+    default:
+      break
+    }
+  }
+
+  private func toggleLocation() {
+    // If location already exists, remove it
+    if entry?.locationName != nil {
+      guard var entry = entry else { return }
+      entry.locationName = nil
+      entry.latitude = nil
+      entry.longitude = nil
+      taskStore.updateJournalEntry(entry)
+      return
+    }
+
+    // Otherwise, add location
+    AsyncTask {
+      isLoadingLocation = true
+
+      if let location = await locationService.getCurrentLocation() {
+        guard var entry = entry else {
+          isLoadingLocation = false
+          return
+        }
+
+        entry.latitude = location.coordinate.latitude
+        entry.longitude = location.coordinate.longitude
+
+        if let name = await locationService.reverseGeocode(location) {
+          entry.locationName = name
+        }
+
+        taskStore.updateJournalEntry(entry)
+      }
+
+      isLoadingLocation = false
+    }
   }
 }
