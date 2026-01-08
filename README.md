@@ -13,7 +13,7 @@ A beautiful iOS productivity app built with SwiftUI for iOS 26+, featuring liqui
 ## Requirements
 
 - iOS 26.0+
-- Xcode 16.0+
+- Xcode 26.0+
 - Swift 6.2+
 
 ## Getting Started
@@ -21,7 +21,7 @@ A beautiful iOS productivity app built with SwiftUI for iOS 26+, featuring liqui
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/souhailtajir/git-Aurora.git
+   git clone https://github.com/souhailtajir/Aurora.git
    ```
 
 2. Open `Aurora.xcodeproj` in Xcode
@@ -55,4 +55,4 @@ This project is proprietary. All rights reserved.
 
 ---
 
-_Built with ❤️ using SwiftUI_
+Built using SWIFT on Mac
