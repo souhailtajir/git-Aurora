@@ -34,7 +34,7 @@ Aurora follows a modern SwiftUI architecture with:
 
 - **SwiftUI Views** — Declarative UI with liquid glass effects
 - **Observable State** — `@Observable` classes for reactive data flow
-- **SwiftData** — Native persistence layer
+- **SwiftData** — Native persistence layers
 
 ## Project Structure
 
