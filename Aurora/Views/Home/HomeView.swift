@@ -322,7 +322,7 @@ struct HomeView: View {
         .padding(.horizontal, 4)
     }
     .padding(16)
-    .glassEffect(.regular)
+    .glassEffect(.clear)
     .padding(.horizontal, 16)
   }
 
