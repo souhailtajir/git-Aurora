@@ -53,7 +53,7 @@ struct JournalStreakCard: View {
     }
     .padding(16)
     .frame(maxWidth: .infinity)
-    .glassEffect(.clear.tint(.orange.opacity(0.15)))
+    .glassEffect(.regular.tint(.orange.opacity(0.15)))
   }
 }
 
